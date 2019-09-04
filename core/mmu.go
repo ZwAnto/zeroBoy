@@ -4,6 +4,7 @@ import (
 	"os"
 	"fmt"
 	"bufio"
+	"path/filepath"
 )
 
 type GbMmu struct {
@@ -12,8 +13,8 @@ type GbMmu struct {
 }
 
 func (m *GbMmu) Init() {
-
-	file, err := os.Open("C:\\Users\\T0to\\Desktop\\gb\\DMG_ROM.bin")
+	path, _ := filepath.Abs("../src/github.com/zwanto/gogb/DMG_ROM.bin")
+	file, err := os.Open(path)
 	if err != nil {
 		fmt.Println(err) 
 		fmt.Println("An Error Occured") 
