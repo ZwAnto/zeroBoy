@@ -8,12 +8,12 @@ import (
 )
 
 type GbMmu struct {
-	Memory [0xffff]int8
-	Bios [0x100]int8
+	Memory [0xffff]byte
+	Bios [0x100]byte
 }
 
 func (m *GbMmu) Init() {
-	path, _ := filepath.Abs("../src/github.com/zwanto/gogb/DMG_ROM.bin")
+	path, _ := filepath.Abs("../go/src/github.com/zwanto/gogb/DMG_ROM.bin")
 	file, err := os.Open(path)
 	if err != nil {
 		fmt.Println(err) 
@@ -35,10 +35,10 @@ func (m *GbMmu) Init() {
 	fmt.Println(err)
 }
 
-func (m *GbMmu) Get(addr int16) int8 {
+func (m *GbMmu) Get(addr uint16) byte {
 	return m.Memory[addr]
 }
 
-func (m *GbMmu) Set(addr int16, value int8) {
+func (m *GbMmu) Set(addr uint16, value byte) {
 	m.Memory[addr] = value
 }

@@ -116,3 +116,47 @@ func (c *GbCpu) GetSP() uint16 {
 func (c *GbCpu) GetPC() uint16 {
 	return c.PC
 }
+
+// FLAGS
+// Get
+func (c *GbCpu) GetfZ() bool {
+	return c.GetF() >> 7
+}
+func (c *GbCpu) GetfS() bool {
+	return (c.GetF() >> 6) & 1
+}
+func (c *GbCpu) GetfH() bool {
+	return (c.GetF() >> 5) & 1
+}
+func (c *GbCpu) GetfC() bool {
+	return (c.GetF() >> 4) & 1
+}
+// Set
+func (c *GbCpu) SetfZ(val bool)  {
+	if val {
+		c.SetF(c.GetF() | (1<<7))
+	} else {
+		c.SetF(c.GetF() &^ (1<<7))
+	}
+}
+func (c *GbCpu) SetfS(val bool) {
+	if val {
+		c.SetF(c.GetF() | (1<<6))
+	} else {
+		c.SetF(c.GetF() &^ (1<<6))
+	}
+}
+func (c *GbCpu) SetfH(val bool) {
+	if val {
+		c.SetF(c.GetF() | (1<<5))
+	} else {
+		c.SetF(c.GetF() &^ (1<<5))
+	}
+}
+func (c *GbCpu) SetfC(val bool) {
+	if val {
+		c.SetF(c.GetF() | (1<<4))
+	} else {
+		c.SetF(c.GetF() &^ (1<<4))
+	}
+}
