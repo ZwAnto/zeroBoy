@@ -9,7 +9,7 @@ import (
 
 type GbMmu struct {
 	Memory [0xffff]byte
-	Bios [0x100]byte
+	Bios []byte
 }
 
 func (m *GbMmu) Init() {
@@ -32,7 +32,10 @@ func (m *GbMmu) Init() {
 	_,err = bufr.Read(bytes)
 	
 	fmt.Println(bytes)
-	fmt.Println(err)
+
+	for k, v := range bytes {
+		m.Memory[k] = v
+	}
 }
 
 func (m *GbMmu) Get(addr uint16) byte {

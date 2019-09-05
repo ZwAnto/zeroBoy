@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/zwanto/gogb/core"
 	"fmt"
+	"strconv"
 )
 
 func main() {
@@ -12,24 +13,15 @@ func main() {
 
 	core.Init()
 	core.GbMmu.Init()
-
-
-
-	// core.GbCpu.SetAF(300)
-
-	// fmt.Println(core.GbCpu.A)
-
-	// fmt.Println(core.GbCpu.F)
-
-	// core.GbMmu.Set(30,50)
-	// fmt.Println(core.GbMmu.Get(30))
-
-	// fmt.Println(core.GbCpu.GetSP())
-
-	core.GbCpu.SetC(30)
-	// fmt.Println(core.Operand1(0x0d)())
-	core.Opcode(0x22)
-	fmt.Println(core.GbCpu.GetHL())
-
+	i := 0
+	for ;i <= 1; { // initialisation and post are omitted
+		a := core.GbMmu.Memory[core.GbCpu.PC]
+		fmt.Println(strconv.FormatInt(int64(core.GbCpu.PC),16) + ":" + strconv.FormatInt(int64(a),16))
+		core.GbCpu.PC ++ 
+		core.Opcode(a)
+		if core.GbCpu.PC == 0x6b {
+			break
+		}
+    }
 	fmt.Println("Hello, world.")
 }

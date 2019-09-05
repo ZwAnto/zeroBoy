@@ -100,16 +100,16 @@ func (c *GbCpu) SetPC(val uint16) {
 // get
 
 func (c *GbCpu) GetBC() uint16 {
-	return uint16(( c.B & 0xff ) + c.C)
+	return uint16((uint16(c.B) << 8) + uint16(c.C))
 }
 func (c *GbCpu) GetDE() uint16 {
-	return uint16(( c.D & 0xff ) + c.E)
+	return uint16((uint16(c.D) << 8) + uint16(c.E))
 }
 func (c *GbCpu) GetHL() uint16 {
-	return uint16(( c.H & 0xff ) + c.L)
+	return uint16((uint16(c.H) << 8) + uint16(c.L))
 }
 func (c *GbCpu) GetAF() uint16 {
-	return uint16(( c.A & 0xff ) + c.F)
+	return uint16((uint16(c.A) << 8) + uint16(c.F))
 }
 func (c *GbCpu) GetSP() uint16 {
 	return c.SP
