@@ -1,6 +1,6 @@
 package core
 
-func (c *GbCore) Test(a byte) {
+func (c *GbCore) Opcode(a byte) {
 	
 	switch a {
 
@@ -190,7 +190,7 @@ func (c *GbCore) Test(a byte) {
 	case 0xc2, 0xc3, 0xca, 0xd2, 0xda, 0xe9:
 		switch {
 		case a == 0xe9:
-			c.GbCpu.SetPC(c.GbMmu.Get(c.GbCpu.GetHL()))
+			c.GbCpu.SetPC(uint16(c.GbMmu.Get(c.GbCpu.GetHL())))
 		case c.tester(a) :
 			val := c.getuint8()
 			c.GbCpu.SetPC(uint16(val))

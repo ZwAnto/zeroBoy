@@ -28,7 +28,7 @@ func main() {
 
 	core.GbCpu.SetC(30)
 	// fmt.Println(core.Operand1(0x0d)())
-	core.Test(0x22)
+	core.Opcode(0x22)
 	fmt.Println(core.GbCpu.GetHL())
 
 	fmt.Println("Hello, world.")
