@@ -8,8 +8,12 @@ import (
 func main() {
 	core := new(core.GbCore)
 
+	fmt.Println("==== GoGB 3mul4t0r ===========")
+
 	core.Init()
 	core.GbMmu.Init()
+
+
 
 	// core.GbCpu.SetAF(300)
 
@@ -24,8 +28,8 @@ func main() {
 
 	core.GbCpu.SetC(30)
 	// fmt.Println(core.Operand1(0x0d)())
-	core.Test(0x79)
-	fmt.Println(core.GbCpu.GetA())
+	core.Test(0x22)
+	fmt.Println(core.GbCpu.GetHL())
 
 	fmt.Println("Hello, world.")
 }

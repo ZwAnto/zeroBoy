@@ -11,6 +11,7 @@ type GbCpu struct {
 	L byte
 	SP uint16
 	PC uint16
+	IME bool
 }
 
 // BYTE REGISTER
@@ -119,16 +120,16 @@ func (c *GbCpu) GetPC() uint16 {
 
 // FLAGS
 // Get
-func (c *GbCpu) GetfZ() bool {
+func (c *GbCpu) GetfZ() byte {
 	return c.GetF() >> 7
 }
-func (c *GbCpu) GetfS() bool {
+func (c *GbCpu) GetfS() byte {
 	return (c.GetF() >> 6) & 1
 }
-func (c *GbCpu) GetfH() bool {
+func (c *GbCpu) GetfH() byte {
 	return (c.GetF() >> 5) & 1
 }
-func (c *GbCpu) GetfC() bool {
+func (c *GbCpu) GetfC() byte {
 	return (c.GetF() >> 4) & 1
 }
 // Set
