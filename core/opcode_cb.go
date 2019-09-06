@@ -1,44 +1,36 @@
 package core
 
-func (c *GbCore) getter_cb(i byte) func() byte {
-
-	var f func() byte
-
-	switch i{
-	case 0: f = c.GbCpu.GetB
-	case 1: f = c.GbCpu.GetC
-	case 2: f = c.GbCpu.GetD
-	case 3: f = c.GbCpu.GetE
-	case 4: f = c.GbCpu.GetH
-	case 5: f = c.GbCpu.GetL
-	case 6: f = c.getHL
-	case 7: f = c.GbCpu.GetA
-	}
-
-	return f
-}
-func (c *GbCore) setter_cb(i byte) func(byte) {
-
-	var f func(byte)
-
-	switch i{
-		case 0: f = c.GbCpu.SetB
-		case 1: f = c.GbCpu.SetC
-		case 2: f = c.GbCpu.SetD
-		case 3: f = c.GbCpu.SetE
-		case 4: f = c.GbCpu.SetH
-		case 5: f = c.GbCpu.SetL
-		case 6: f = c.setHL
-		case 7: f = c.GbCpu.SetA
-		}
-	
-		return f
-}
-
 func (c *GbCore) OpcodeCB(a byte) {
 
-	in := c.getter_cb((a & 0xf) % 8)()
-	out := c.setter_cb((a & 0xf) % 8)
+	var in byte
+	var out func(byte)
+
+	switch (a & 0xf) % 8 {
+		case 0: 
+			in = c.GbCpu.GetB()
+			out = c.GbCpu.SetB
+		case 1: 
+			in = c.GbCpu.GetC()
+			out = c.GbCpu.SetC
+		case 2: 
+			in = c.GbCpu.GetD()
+			out = c.GbCpu.SetD
+		case 3: 
+			in = c.GbCpu.GetE()
+			out = c.GbCpu.SetE
+		case 4: 
+			in = c.GbCpu.GetH()
+			out = c.GbCpu.SetH
+		case 5: 
+			in = c.GbCpu.GetL()
+			out = c.GbCpu.SetL
+		case 6: 
+			in = c.GbMmu.Get(c.GbCpu.GetHL())
+			out = c.msetHL
+		case 7: 
+			in = c.GbCpu.GetA()
+			out = c.GbCpu.SetA
+		}
 
 	switch a {
 	// RLC

@@ -5,7 +5,7 @@ func (c *GbCore) Opcode(a byte) {
 	switch a {
 	//CB
 	case 0xcb:
-		next := c.getuint8()
+		next := c.getbyte()
 		c.OpcodeCB(next)
 
 	//8bits LD
@@ -20,7 +20,7 @@ func (c *GbCore) Opcode(a byte) {
 		0xe0, 0xf0,
 		0x22, 0x32, 0x2a, 0x3a:
 
-		c.setter(a)(c.operand2(a)())
+		c.setter_8(a)(c.operand_r8(a))
 		switch a {
 		case 0x22, 0x2a:
 			c.GbCpu.SetHL(c.GbCpu.GetHL() + 1)
@@ -30,9 +30,9 @@ func (c *GbCore) Opcode(a byte) {
 
 	// 16bits LD
 	case 0x01, 0x11, 0x21, 0x31, 0x08, 0xf9:
-		c.setter16(a)(c.operand216(a)())
+		c.setter_16(a)(c.operand_r16(a))
 	case 0xf8:
-    	val := c.getuint8()
+    	val := c.getbyte()
 		tmp := c.GbCpu.GetSP() ^ uint16(val) ^ (uint16(int32(c.GbCpu.GetSP()) + int32(int8(val))))
 		
 		c.GbCpu.SetfZ( false )
@@ -44,7 +44,7 @@ func (c *GbCore) Opcode(a byte) {
 	// ADD
 	case 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0xc6:
 		
-		val := c.operand1(a)()
+		val := c.operand_l8(a)
 		
 		add := c.GbCpu.A + val
 
@@ -55,7 +55,7 @@ func (c *GbCore) Opcode(a byte) {
 
 		c.GbCpu.SetA(add)
 	case 0xe8:
-    	val := c.getuint8()
+    	val := c.getbyte()
 		tmp := c.GbCpu.GetSP() ^ uint16(val) ^ (uint16(int32(c.GbCpu.GetSP()) + int32(int8(val))))
 		
 		c.GbCpu.SetfZ( false )
@@ -67,7 +67,7 @@ func (c *GbCore) Opcode(a byte) {
 	// ADC
 	case 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e, 0x8f, 0xce:
 
-		val := c.operand1(a)()
+		val := c.operand_l8(a)
 		add := c.GbCpu.A + val + c.GbCpu.GetfC()
 
 		c.GbCpu.SetfZ( add == 0 )
@@ -80,7 +80,7 @@ func (c *GbCore) Opcode(a byte) {
 	//SUB
 	case 0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97, 0xd6:
 
-		val := c.operand1(a)()
+		val := c.operand_l8(a)
 		sub := c.GbCpu.A - val
 		
 		c.GbCpu.SetfZ( sub == 0 )
@@ -93,7 +93,7 @@ func (c *GbCore) Opcode(a byte) {
 	//SBC
 	case 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9d, 0x9e, 0x9f, 0xde:
 
-		val := c.operand1(a)()
+		val := c.operand_l8(a)
 		sub := c.GbCpu.A - val - c.GbCpu.GetfC()
 
 		c.GbCpu.SetfZ( sub == 0 )
@@ -106,7 +106,7 @@ func (c *GbCore) Opcode(a byte) {
 	//AND
 	case 0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xe6:
 
-		val := c.GbCpu.A & c.operand1(a)()
+		val := c.GbCpu.A & c.operand_l8(a)
 
 		c.GbCpu.SetfZ( val == 0 )
 		c.GbCpu.SetfS( false )
@@ -118,7 +118,7 @@ func (c *GbCore) Opcode(a byte) {
 	//XOR
 	case 0xa8, 0xa9, 0xaa, 0xab, 0xac, 0xad, 0xae, 0xaf, 0xee:
 
-		val := c.GbCpu.A ^ c.operand1(a)()
+		val := c.GbCpu.A ^ c.operand_l8(a)
 
 		c.GbCpu.SetfZ( val == 0 )
 		c.GbCpu.SetfS( false )
@@ -130,7 +130,7 @@ func (c *GbCore) Opcode(a byte) {
 	//OR
 	case 0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7,0xf6:
 		
-		val := c.GbCpu.A | c.operand1(a)()
+		val := c.GbCpu.A | c.operand_l8(a)
 
 		c.GbCpu.SetfZ( val == 0 )
 		c.GbCpu.SetfS( false )
@@ -142,7 +142,7 @@ func (c *GbCore) Opcode(a byte) {
 	//CP
 	case 0xb8, 0xb9, 0xba, 0xbb, 0xbc, 0xbd, 0xbe, 0xbf, 0xfe:
 
-		val := c.operand1(a)()
+		val := c.operand_l8(a)
 
 		c.GbCpu.SetfZ( c.GbCpu.A == val )
 		c.GbCpu.SetfS( true )
@@ -152,29 +152,29 @@ func (c *GbCore) Opcode(a byte) {
 	//INC
 	case 0x04, 0x14, 0x24, 0x34, 0x0c, 0x1c, 0x2c, 0x3c:
 
-		val := c.operand1(a)()
+		val := c.operand_l8(a)
 
 		c.GbCpu.SetfZ( val + 1 == 0 )
 		c.GbCpu.SetfS( false )
 		c.GbCpu.SetfH( (val & 0x0f) + (1 & 0x0f) > 0x0f )
 
-		c.setter(a)(val + 1)
+		c.setter_8(a)(val + 1)
 
 	//DEC
 	case 0x05, 0x15, 0x25, 0x35, 0x0d, 0x1d, 0x2d, 0x3d:
 
-		val := c.operand1(a)()
+		val := c.operand_l8(a)
 
 		c.GbCpu.SetfZ( val - 1 == 0 )
 		c.GbCpu.SetfS( true )
 		c.GbCpu.SetfH( (val & 0x0f) == 0 )
 
-		c.setter(a)(val - 1)
+		c.setter_8(a)(val - 1)
 
 	//16bit ADD
 	case 0x09, 0x19, 0x29, 0x39:
 
-		val := c.GbCpu.GetHL() + c.operand216(a)()
+		val := c.GbCpu.GetHL() + c.operand_r16(a)
 
 		c.GbCpu.SetfS( false )
 		c.GbCpu.SetfH( (c.GbCpu.GetHL() & 0xfff) > ( val & 0xfff) )
@@ -184,31 +184,31 @@ func (c *GbCore) Opcode(a byte) {
 
 	//16bit INC
 	case 0x03, 0x13, 0x23, 0x33:
-		c.setter16(a)(c.operand116(a)() + 1)
+		c.setter_16(a)(c.operand_l16(a) + 1)
 	//16bit DEC
 	case 0x0b, 0x1b, 0x2b, 0x3b:
-		c.setter16(a)(c.operand116(a)() - 1)
+		c.setter_16(a)(c.operand_l16(a) - 1)
 
 	// POP
 	case 0xc1, 0xd1, 0xe1, 0xf1:
 		val := (uint16(c.GbMmu.Get(c.GbCpu.GetSP() + 1)) << 8) + uint16(c.GbMmu.Get(c.GbCpu.GetSP()))
 		c.GbCpu.SetSP(c.GbCpu.GetSP() + 2)
-		c.setter16(a)(val)
+		c.setter_16(a)(val)
 	// PUSH
 	case 0xc5, 0xd5, 0xe5, 0xf5:
-		data := c.operand116(a)()
+		data := c.operand_l16(a)
 		c.GbMmu.Set(c.GbCpu.GetSP() - 1 ,byte(data >> 8))
 		c.GbMmu.Set(c.GbCpu.GetSP() - 2 ,byte(data & 0xff))
 		c.GbCpu.SetSP(c.GbCpu.GetSP() - 2)
 	// JR
 	case 0x18, 0x20, 0x28, 0x30, 0x38:
-		val := c.getuint8()
+		val := c.getbyte()
 		if c.tester(a){
 			c.GbCpu.SetPC(uint16(int32(c.GbCpu.GetPC()) + int32(int8(val))))
 		}
 	// JP
 	case 0xc2, 0xc3, 0xca, 0xd2, 0xda :
-		val := c.getuint8()
+		val := c.getbyte()
 		if c.tester(a){
 			c.GbCpu.SetPC(uint16(val))
 		}
@@ -216,7 +216,7 @@ func (c *GbCore) Opcode(a byte) {
 		c.GbCpu.SetPC(uint16(c.GbMmu.Get(c.GbCpu.GetHL())))
 	// CALL
 	case 0xc4, 0xd4, 0xcc, 0xdc, 0xcd:
-		val := c.getuint8()
+		val := c.getbyte()
 		if c.tester(a){
 			// push
 			data := c.GbCpu.GetPC()

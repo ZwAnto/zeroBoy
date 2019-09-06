@@ -1,65 +1,7 @@
 package core
 
-func (c *GbCore) getuint8() byte {
-	val := c.GbMmu.Get(c.GbCpu.GetPC())
-	c.GbCpu.PC++
-	return val
-}
-func (c *GbCore) getuint16() uint16 {
-	var val uint16
-	val = (uint16(c.GbMmu.Get(c.GbCpu.GetPC() + 1)) << 8) | uint16(c.GbMmu.Get(c.GbCpu.GetPC()))
-	c.GbCpu.PC++
-	c.GbCpu.PC++
-	return val
-}
-
-func (c *GbCore) setA1616(val uint16) {
-	addr := c.getuint16()
-	c.GbMmu.Set(addr, byte(val & 0xff))
-	c.GbMmu.Set(addr + 1, byte((val & 0xff00) >> 8))
-}
-func (c *GbCore) setA16(val byte) {
-	c.GbMmu.Set(c.getuint16(), val)
-}
-func (c *GbCore) getA16() byte {
-	return c.GbMmu.Get(c.getuint16())
-}
-
-func (c *GbCore) setA8(val byte) {
-	c.GbMmu.Set( 0xff00 + uint16(c.getuint8()), val)
-}
-func (c *GbCore) getA8() byte {
-	return c.GbMmu.Get( 0xff00 + uint16(c.getuint8()))
-}
-
-func (c *GbCore) setC(val byte) {
-	c.GbMmu.Set( 0xff00 + uint16(c.GbCpu.GetC()), val)
-}
-func (c *GbCore) getC() byte {
-	return c.GbMmu.Get( 0xff00 + uint16(c.GbCpu.GetC()))
-}
-
-func (c *GbCore) setHL(val byte) {
-	c.GbMmu.Set(c.GbCpu.GetHL(),val)
-}
-func (c *GbCore) setBC(val byte) {
-	c.GbMmu.Set(c.GbCpu.GetBC(),val)
-}
-func (c *GbCore) setDE(val byte) {
-	c.GbMmu.Set(c.GbCpu.GetDE(),val)
-}
-func (c *GbCore) getHL() byte {
-	return c.GbMmu.Get(c.GbCpu.GetHL())
-}
-func (c *GbCore) getBC() byte {
-	return c.GbMmu.Get(c.GbCpu.GetBC())
-}
-func (c *GbCore) getDE() byte {
-	return c.GbMmu.Get(c.GbCpu.GetDE())
-}
-
 // 8bit setter operator
-func (c *GbCore) setter(val byte) func(byte) {
+func (c *GbCore) setter_8(val byte) func(byte) {
 
 	var f func(byte) 
 
@@ -95,7 +37,7 @@ func (c *GbCore) setter(val byte) func(byte) {
 		0x70, 0x71, 0x72, 0x73, 0x74, 0x75,       0x77,
 		0xe9,
 		0x22, 0x32:
-		f = c.setHL
+		f = c.msetHL
 	// A
 	case 0x0a,
 		0x1a,
@@ -109,21 +51,19 @@ func (c *GbCore) setter(val byte) func(byte) {
 
 	// (BC)
 	case 0x02:
-		f = c.setBC
+		f = c.msetBC
 	// (DE)
 	case 0x12:
-		f = c.setDE
+		f = c.msetDE
 	// (C)
 	case 0xe2:
-		f = c.setC
+		f = c.msetC
 	// (a16)
 	case 0xea:
-		f = c.setA16
+		f = c.msetA16
 	// (a8)
 	case 0xe0:
-		f = c.setA8
-
-
+		f = c.msetA8
 	}
 
 	return f
@@ -131,9 +71,9 @@ func (c *GbCore) setter(val byte) func(byte) {
 // 8bit left operand
 // ADD SUB ...
 // INC, DEC
-func (c *GbCore) operand1(val byte) func() byte{
+func (c *GbCore) operand_l8(val byte) byte {
 
-	var f func() byte 
+	var f byte 
 
 	switch val {
 
@@ -141,117 +81,116 @@ func (c *GbCore) operand1(val byte) func() byte{
 	case 0x80, 0x90, 0xa0, 0xb0,
 		 0x88, 0x98, 0xa8, 0xb8,
 		 0x04, 0x05:
-		f = c.GbCpu.GetB
+		f = c.GbCpu.GetB()
 	// C
 	case 0x81, 0x91, 0xa1, 0xb1,
 		0x89, 0x99, 0xa9, 0xb9, 
 		0x0c, 0x0d:
-		f = c.GbCpu.GetC
+		f = c.GbCpu.GetC()
 	// D
 	case 0x82, 0x92, 0xa2, 0xb2,
 		0x8a, 0x9a, 0xaa, 0xba,
 		0x14, 0x15:
-		f = c.GbCpu.GetD
+		f = c.GbCpu.GetD()
 	// E
 	case 0x83, 0x93, 0xa3, 0xb3,
 		0x8b, 0x9b, 0xab, 0xbb, 
 		0x1c, 0x1d:
-		f = c.GbCpu.GetE
+		f = c.GbCpu.GetE()
 	// H
 	case 0x84, 0x94, 0xa4, 0xb4,
 		0x8c, 0x9c, 0xac, 0xbc,
 		0x24, 0x25:
-		f = c.GbCpu.GetH
+		f = c.GbCpu.GetH()
 	// L
 	case 0x85, 0x95, 0xa5, 0xb5,
 		0x8d, 0x9d, 0xad, 0xbd, 
 		0x2c, 0x2d:
-		f = c.GbCpu.GetL
+		f = c.GbCpu.GetL()
 	// (HL)
 	case 0x86, 0x96, 0xa6, 0xb6,
 		0x8e, 0x9e, 0xae, 0xbe,
 		0x34, 0x35:
-		f = c.getHL
+		f = c.GbMmu.Get(c.GbCpu.GetHL())
 	// A
 	case 0x87, 0x97, 0xa7, 0xb7,
 		0x8f, 0x9f, 0xaf, 0xbf, 
 		0x3c, 0x3d:
-		f = c.GbCpu.GetA
+		f = c.GbCpu.GetA()
 
 	// d8
 	case 0xc6, 0xd6, 0xe6, 0xf6, 0xce, 0xde, 0xee, 0xfe:
-		f =  c.getuint8
+		f =  c.getbyte()
 	}
 	return f
 }
 // 8bit right operand
 //LD 
-func (c *GbCore) operand2(val byte) func() byte{
+func (c *GbCore) operand_r8(val byte) byte {
 
-	var f func() byte 
+	var f byte 
 
 	switch val {
 	// B
 	case 0x40, 0x50, 0x60, 0x70,
 		0x48, 0x58, 0x68, 0x78:
-		f = c.GbCpu.GetB
+		f = c.GbCpu.GetB()
 	// C
 	case 0x41, 0x51, 0x61, 0x71,
 		0x49, 0x59, 0x69, 0x79:
-		f = c.GbCpu.GetC
+		f = c.GbCpu.GetC()
 	// D
 	case 0x42, 0x52, 0x62, 0x72,
 		0x4a, 0x5a, 0x6a, 0x7a:
-		f = c.GbCpu.GetD
+		f = c.GbCpu.GetD()
 	// E
 	case 0x43, 0x53, 0x63, 0x73,
 		0x4b, 0x5b, 0x6b, 0x7b:
-		f = c.GbCpu.GetE
+		f = c.GbCpu.GetE()
 	// H
 	case 0x44, 0x54, 0x64, 0x74,
 		0x4c, 0x5c, 0x6c, 0x7c:
-		f = c.GbCpu.GetH
+		f = c.GbCpu.GetH()
 	// L
 	case 0x45, 0x55, 0x65, 0x75,
 		0x4d, 0x5d, 0x6d, 0x7d:
-		f = c.GbCpu.GetL
+		f = c.GbCpu.GetL()
 	// (HL)
 	case 0x46, 0x56, 0x66,
 		0x4e, 0x5e, 0x6e, 0x7e,
 		0x2a, 0x3a:
-		f = c.getHL
+		f = c.GbMmu.Get(c.GbCpu.GetHL())
 	// A
 	case 0x02, 0x12, 0x22, 0x32, 
 		0x47, 0x57, 0x67, 0x77,
 		0x4f, 0x5f, 0x6f, 0x7f,
 		0xe0, 0xe2, 0xea:
-		f = c.GbCpu.GetA
+		f = c.GbCpu.GetA()
 
 	// (BC)
 	case 0x0a:
-		f = c.getBC
+		f = c.GbMmu.Get(c.GbCpu.GetBC())
 	// (DE)
 	case 0x1a:
-		f = c.getDE
+		f = c.GbMmu.Get(c.GbCpu.GetDE())
 	// (C)
 	case 0xf2:
-		f = c.getC
+		f = c.GbMmu.Get( 0xff00 + uint16(c.GbCpu.GetC()))
 	// (a16)
 	case 0xfa:
-		f = c.getA16
+		f = c.GbMmu.Get(c.getuint16())
 	// (a8)
 	case 0xf0:
-		f = c.getA8
+		f = c.GbMmu.Get( 0xff00 + uint16(c.getbyte()))
 	// d8
 	case 0x06, 0x16, 0x26, 0x36, 0x0e, 0x1e, 0x2e, 0x3e:
-		f =  c.getuint8
+		f =  c.getbyte()
 	}
 
 	return f
 }
-
 // 16bit setter operator
-func (c *GbCore) setter16(val byte) func(uint16) {
+func (c *GbCore) setter_16(val byte) func(uint16) {
 
 	var f func(uint16) 
 
@@ -269,57 +208,56 @@ func (c *GbCore) setter16(val byte) func(uint16) {
 	case 0x33, 0x3b, 0x31, 0xf9, 0xf1:
 		f = c.GbCpu.SetSP
 	case 0x08:
-		f = c.setA1616
+		f = c.msetA32
 	}
 	return f
 }
 // 16bit left operand
-func (c *GbCore) operand116(val byte) func() uint16{
+func (c *GbCore) operand_l16(val byte) uint16 {
 
-	var f func() uint16 
+	var f uint16 
 
 	switch val {
 	// BC
 	case 0x03, 0x0b, 0xc5:
-		f = c.GbCpu.GetBC
+		f = c.GbCpu.GetBC()
 	// DE
 	case 0x13, 0x1b, 0xd5:
-		f = c.GbCpu.GetDE
+		f = c.GbCpu.GetDE()
 	// HL
 	case 0x23, 0x2b, 0xe5:
-		f = c.GbCpu.GetHL
+		f = c.GbCpu.GetHL()
 	// SP
 	case 0x33, 0x3b, 0xf5:
-	f = c.GbCpu.GetSP
+	f = c.GbCpu.GetSP()
 	}
 	return f
 }
 // 16bit right operand
-func (c *GbCore) operand216(val byte) func() uint16{
+func (c *GbCore) operand_r16(val byte) uint16 {
 
-	var f func() uint16 
+	var f uint16 
 
 	switch val {
 	// BC
 	case 0x09:
-		f = c.GbCpu.GetBC
+		f = c.GbCpu.GetBC()
 	// DE
 	case 0x19:
-		f = c.GbCpu.GetDE
+		f = c.GbCpu.GetDE()
 	// HL
 	case 0x29, 0xf9:
-		f = c.GbCpu.GetHL
+		f = c.GbCpu.GetHL()
 	// SP
 	case 0x39, 0x08:
-		f = c.GbCpu.GetSP
+		f = c.GbCpu.GetSP()
 	// d16
 	case 0x01, 0x11, 0x21, 0x31:
-		f = c.getuint16
+		f = c.getuint16()
 	}
 
 	return f
 }
-
 // Boolean 
 func (c *GbCore) tester(val byte) bool {
 
