@@ -1,36 +1,38 @@
 package core
 
 import (
-	//"fmt"
-	"time"
+	// "fmt"
+	// "time"
+	// "strconv"
 )
 type GbCore struct {
 	GbMmu GbMmu
 	GbCpu GbCpu
+	GbPpu GbPpu
 }
 
 func (c *GbCore) Init() {
 	c.GbMmu.Init()
 	c.GbCpu.Init()
+	c.GbPpu.Init()
 }
 
-func (c *GbCore) CpuThread(op chan bool) {
-
-	freq := 1000 * 1 / c.GbCpu.ClockSpeed
+func (c *GbCore) CpuThread(op chan bool, step chan uint64) {
 
 	i := 0
 	for ;i <= 1; { 
-		start := time.Now()
+
 		a := c.GbMmu.Get(c.GbCpu.PC)
+		//fmt.Println(strconv.FormatInt(int64(c.GbCpu.PC),16) + ":" + strconv.FormatInt(int64(a),16))
 		c.GbCpu.PC ++ 
 		t := c.Opcode(a)
-		if c.GbCpu.PC == 0x68 {
+		if c.GbCpu.PC == 0xe9 {
 			break
 		}
+
 		c.GbCpu.Timer += uint64(t)
-		elapsed := 1-time.Since(start)
-		b := time.Duration(freq*float64(t)) * time.Nanosecond - elapsed
-		time.Sleep(b)
+	
+		step <- c.GbCpu.Timer
 	}
 
 	op <- true
