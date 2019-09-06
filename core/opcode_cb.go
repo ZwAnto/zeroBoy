@@ -1,10 +1,10 @@
 package core
 
-func (c *GbCore) OpcodeCB(a byte) {
+func (c *GbCore) OpcodeCB(a byte) byte {
 
 	var in byte
 	var out func(byte)
-
+	var t byte
 	switch (a & 0xf) % 8 {
 		case 0: 
 			in = c.GbCpu.GetB()
@@ -135,4 +135,13 @@ func (c *GbCore) OpcodeCB(a byte) {
 		pos := (a-0xc0) / 8
 		out(in | 1<<pos)
 	}
+
+	switch {
+	case (a & 0xf) % 8 == 6:
+		t = 16
+	default :
+		t = 8
+	}
+
+	return t
 }

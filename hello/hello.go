@@ -3,25 +3,28 @@ package main
 import (
 	"github.com/zwanto/goBoy/core"
 	"fmt"
-	"strconv"
+	//"strconv"
+	//"time"
 )
 
 func main() {
 	core := new(core.GbCore)
 
-	fmt.Println("==== GoGB 3mul4t0r ===========")
+	p := fmt.Println
+
+	p("|========== goBoy Emulator ==========|")
 
 	core.Init()
-	core.GbMmu.Init()
-	i := 0
-	for ;i <= 1; { // initialisation and post are omitted
-		a := core.GbMmu.Memory[core.GbCpu.PC]
-		fmt.Println(strconv.FormatInt(int64(core.GbCpu.PC),16) + ":" + strconv.FormatInt(int64(a),16))
-		core.GbCpu.PC ++ 
-		core.Opcode(a)
-		if core.GbCpu.PC == 0x6b {
-			break
-		}
+	
+	operationDone := make(chan bool)
+
+	fmt.Printf("| Clock Speed : %.2f Mhz\n",core.GbCpu.ClockSpeed)
+
+	go core.CpuThread(operationDone)
+
+	for i := 0; i < 1; i++ {
+        <-operationDone
     }
-	fmt.Println("Hello, world.")
+	
+	p("|================ END ===============|")
 }

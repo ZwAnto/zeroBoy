@@ -12,6 +12,12 @@ type GbCpu struct {
 	SP uint16
 	PC uint16
 	IME bool
+	ClockSpeed float64
+	Timer uint64
+}
+
+func (c *GbCpu) Init() {
+	c.ClockSpeed = 4.194304
 }
 
 // BYTE REGISTER

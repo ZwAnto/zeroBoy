@@ -10,9 +10,13 @@ import (
 type GbMmu struct {
 	Memory [0xffff]byte
 	Bios []byte
+	FlagBios bool
 }
 
 func (m *GbMmu) Init() {
+
+	m.FlagBios = true
+
 	path, _ := filepath.Abs("./DMG_ROM.bin")
 	file, err := os.Open(path)
 	if err != nil {
@@ -30,15 +34,17 @@ func (m *GbMmu) Init() {
 
     bufr := bufio.NewReader(file)
 	_,err = bufr.Read(bytes)
-	
-	fmt.Println(bytes)
 
-	for k, v := range bytes {
-		m.Memory[k] = v
-	}
+	m.Bios = bytes
+	// for k, v := range bytes {
+	// 	m.Memory[k] = v
+	// }
 }
 
 func (m *GbMmu) Get(addr uint16) byte {
+	if addr < 0x100 && m.FlagBios {
+		return m.Bios[addr]
+	}
 	return m.Memory[addr]
 }
 
