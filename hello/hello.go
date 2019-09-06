@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/zwanto/gogb/core"
+	"github.com/zwanto/goBoy/core"
 	"fmt"
 	"strconv"
 )
