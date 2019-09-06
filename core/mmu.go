@@ -13,7 +13,7 @@ type GbMmu struct {
 }
 
 func (m *GbMmu) Init() {
-	path, _ := filepath.Abs("../go/src/github.com/zwanto/gogb/DMG_ROM.bin")
+	path, _ := filepath.Abs("./DMG_ROM.bin")
 	file, err := os.Open(path)
 	if err != nil {
 		fmt.Println(err) 
