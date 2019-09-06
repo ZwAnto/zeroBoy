@@ -17,12 +17,11 @@ func main() {
 	core.Init()
 	
 	operationDone := make(chan bool)
-	cpuStep := make(chan uint64)
 
 	fmt.Printf("| Clock Speed : %.2f Mhz\n",core.GbCpu.ClockSpeed)
 
-	go core.CpuThread(operationDone,cpuStep)
-	go core.PpuThread(operationDone,cpuStep)
+	go core.CpuThread(operationDone)
+	go core.PpuThread(operationDone)
 
 	for i := 0; i < 1; i++ {
         <-operationDone
