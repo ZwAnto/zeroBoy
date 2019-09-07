@@ -8,11 +8,13 @@ import (
 type GbPpu struct {
 	Line byte
 	Mode byte
+	FPS float64
 }
 
 func (p *GbPpu) Init() {
 	p.Line = 0
 	p.Mode = 2
+	p.FPS = 60
 }
 
 func (c *GbCore) PpuThread(op chan bool) {
