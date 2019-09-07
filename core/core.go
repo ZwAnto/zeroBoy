@@ -1,9 +1,9 @@
 package core
 
 import (
-	// "fmt"
+	//"fmt"
 	"time"
-	// "strconv"
+	//"strconv"
 )
 type GbCore struct {
 	GbMmu GbMmu
@@ -27,14 +27,17 @@ func (c *GbCore) CpuThread(op chan bool) {
 		for ;c.GbCpu.Timer <= stepByFrame; {
 
 			a := c.GbMmu.Get(c.GbCpu.PC)
-			// fmt.Println(strconv.FormatInt(int64(c.GbCpu.PC),16) + ":" + strconv.FormatInt(int64(a),16))
+			//fmt.Println(strconv.FormatInt(int64(c.GbCpu.PC),16) + ":" + strconv.FormatInt(int64(a),16))
 			c.GbCpu.PC ++ 
 			t := c.Opcode(a)
-			if c.GbCpu.PC == 0x68 {
-				break
+			if c.GbCpu.PC == 0xe9 {
+				op <- true
 			}
-
+			c.GbPpu.Clock += uint64(t)
 			c.GbCpu.Timer += uint64(t)
+			c.PpuThread()
+
+
 		}
 	}
 

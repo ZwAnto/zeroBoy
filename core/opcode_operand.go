@@ -267,30 +267,34 @@ func (c *GbCore) tester(val byte) bool {
 	// NZ
 	case 0x20, 0xc0, 0xc2, 0xc4:
 		if c.GbCpu.GetfZ() == 1 {
-			return false
+			f = false
+		} else {
+			f = true
 		}
-		return true
 	// Z
 	case 0x28, 0xc8, 0xca, 0xcc:
 		if c.GbCpu.GetfZ() == 1 {
-			return true
+			f = true
+		} else {
+			f = false
 		}
-		return false
 	// NC
 	case 0x30, 0xd0, 0xd2, 0xd4:
 		if c.GbCpu.GetfC() == 1 {
-			return false
-		}
-		return true
+			f = false
+		} else {
+			f = true
+	}
 	// C
 	case 0x38, 0xd8, 0xda, 0xdc:
 		if c.GbCpu.GetfC() == 1 {
-			return true
-		}
-		return false
+			f = true
+		} else {
+			f = false
+	}
 	// TRUE
 	case 0x18, 0xc3, 0xc9, 0xcd, 0xd9:
-		return true
+		f = true
 	}
 	return f
 }

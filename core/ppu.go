@@ -1,13 +1,9 @@
 package core
 
-import (
-	"time"
-	"fmt"
-)
-
 type GbPpu struct {
 	Line byte
 	Mode byte
+	Clock uint64
 	FPS float64
 }
 
@@ -15,51 +11,44 @@ func (p *GbPpu) Init() {
 	p.Line = 0
 	p.Mode = 2
 	p.FPS = 60
+	p.Clock = 0
 }
 
-func (c *GbCore) PpuThread(op chan bool) {
+func (c *GbCore) PpuThread() {
 
-	clock := 0
-
-	ticker := time.NewTicker(time.Duration(230) * time.Nanosecond )
-
-	for range ticker.C {
-		clock++
-
-		switch {
-		case c.GbPpu.Mode == 2 : 
-			if clock >= 80 {
-				clock = 0
-				c.GbPpu.Mode = 3
-			}
-		case c.GbPpu.Mode == 3 : 
-			if clock >= 172 {
-				clock = 0
-				c.GbPpu.Mode = 0
-			}
-		case c.GbPpu.Mode == 0 : 
-			if clock >= 204 {
-				clock = 0
-				c.GbPpu.Line++
-				if c.GbPpu.Line == 143 {
-					c.GbPpu.Mode = 1
-				} else {
-					c.GbPpu.Mode = 2
-				} 
-			}
-		case c.GbPpu.Mode == 1 : 
-			if clock >= 456 {
-				clock = 0
-				c.GbPpu.Line++
-			}
-			if c.GbPpu.Line == 153 {
-				c.GbPpu.Line = 0
-				c.GbPpu.Mode = 2
-				fmt.Println("l,iduznxuez")
-			}	
+	switch {
+	case c.GbPpu.Mode == 2 : 
+		if c.GbPpu.Clock >= 80 {
+			c.GbPpu.Clock = 0
+			c.GbPpu.Mode = 3
 		}
-		
-		c.GbMmu.Set(0xff44, c.GbPpu.Line) 
+	case c.GbPpu.Mode == 3 : 
+		if c.GbPpu.Clock >= 172 {
+			c.GbPpu.Clock = 0
+			c.GbPpu.Mode = 0
+		}
+	case c.GbPpu.Mode == 0 : 
+		if c.GbPpu.Clock >= 204 {
+			c.GbPpu.Clock = 0
+			c.GbPpu.Line++
+			if c.GbPpu.Line == 143 {
+				c.GbPpu.Mode = 1
+			} else {
+				c.GbPpu.Mode = 2
+			} 
+		}
+	case c.GbPpu.Mode == 1 : 
+		if c.GbPpu.Clock >= 456 {
+			c.GbPpu.Clock = 0
+			c.GbPpu.Line++
+		}
+		if c.GbPpu.Line == 153 {
+			c.GbPpu.Clock = 0
+			c.GbPpu.Line = 0
+			c.GbPpu.Mode = 2
+			
+		}	
 	}
-	op <- true
+	
+	c.GbMmu.Set(0xff44, c.GbPpu.Line) 
 }
