@@ -1,8 +1,14 @@
 package core
 
+// BIT
+
+func getbyte(b byte, pos uint8) byte {
+	return b >> pos & 1
+}
+
 // RETRIEVING DATA 
 
-func (c *GbCore) getbyte() byte {
+func (c *GbCore) getuint8() byte {
 	/*
 	Retrieve next byte according to PC
 	Increment PC
@@ -43,7 +49,7 @@ func (c *GbCore) msetA8(val byte) {
 	/*
 	Put 8 bits data into memory according to a 8 bits address 
 	*/
-	c.GbMmu.Set( 0xff00 + uint16(c.getbyte()), val)
+	c.GbMmu.Set( 0xff00 + uint16(c.getuint8()), val)
 }
 func (c *GbCore) msetC(val byte) {
 	/*

@@ -15,6 +15,7 @@ func (c *GbCore) Init() {
 	c.GbMmu.Init()
 	c.GbCpu.Init()
 	c.GbPpu.Init()
+	c.GbMmu.LoadROM()
 }
 
 func (c *GbCore) CpuThread(op chan bool, ppu chan bool, cpu chan bool ) {

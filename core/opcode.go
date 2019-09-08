@@ -10,7 +10,7 @@ func (c *GbCore) Opcode(a byte) byte {
 	switch a {
 	//CB
 	case 0xcb:
-		next := c.getbyte()
+		next := c.getuint8()
 		t = 4 + c.OpcodeCB(next)
 	//8bits LD
 	case 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f,
@@ -59,7 +59,7 @@ func (c *GbCore) Opcode(a byte) byte {
 		}
 	
 	case 0xf8:
-    	val := c.getbyte()
+    	val := c.getuint8()
 		tmp := c.GbCpu.GetSP() ^ uint16(val) ^ (uint16(int32(c.GbCpu.GetSP()) + int32(int8(val))))
 		
 		c.GbCpu.SetfZ( false )
@@ -92,7 +92,7 @@ func (c *GbCore) Opcode(a byte) byte {
 		}
 
 	case 0xe8:
-    	val := c.getbyte()
+    	val := c.getuint8()
 		tmp := c.GbCpu.GetSP() ^ uint16(val) ^ (uint16(int32(c.GbCpu.GetSP()) + int32(int8(val))))
 		
 		c.GbCpu.SetfZ( false )
@@ -298,7 +298,7 @@ func (c *GbCore) Opcode(a byte) byte {
 		t = 16
 	// JR
 	case 0x18, 0x20, 0x28, 0x30, 0x38:
-		val := c.getbyte()
+		val := c.getuint8()
 		if c.tester(a){
 			c.GbCpu.SetPC(uint16(int32(c.GbCpu.GetPC()) + int32(int8(val))))
 			t = 12
@@ -306,7 +306,7 @@ func (c *GbCore) Opcode(a byte) byte {
 		t = 8
 	// JP
 	case 0xc2, 0xc3, 0xca, 0xd2, 0xda :
-		val := c.getbyte()
+		val := c.getuint8()
 		if c.tester(a){
 			c.GbCpu.SetPC(uint16(val))
 			t = 16
@@ -317,7 +317,7 @@ func (c *GbCore) Opcode(a byte) byte {
 		t = 4
 	// CALL
 	case 0xc4, 0xd4, 0xcc, 0xdc, 0xcd:
-		val := c.getbyte()
+		val := c.getuint8()
 		if c.tester(a){
 			// push
 			data := c.GbCpu.GetPC()

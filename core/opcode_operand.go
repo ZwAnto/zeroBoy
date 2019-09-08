@@ -120,7 +120,7 @@ func (c *GbCore) operand_l8(val byte) byte {
 
 	// d8
 	case 0xc6, 0xd6, 0xe6, 0xf6, 0xce, 0xde, 0xee, 0xfe:
-		f =  c.getbyte()
+		f =  c.getuint8()
 	}
 	return f
 }
@@ -181,10 +181,10 @@ func (c *GbCore) operand_r8(val byte) byte {
 		f = c.GbMmu.Get(c.getuint16())
 	// (a8)
 	case 0xf0:
-		f = c.GbMmu.Get( 0xff00 + uint16(c.getbyte()))
+		f = c.GbMmu.Get( 0xff00 + uint16(c.getuint8()))
 	// d8
 	case 0x06, 0x16, 0x26, 0x36, 0x0e, 0x1e, 0x2e, 0x3e:
-		f =  c.getbyte()
+		f =  c.getuint8()
 	}
 
 	return f

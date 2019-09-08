@@ -40,7 +40,29 @@ func (m *GbMmu) Init() {
 	// 	m.Memory[k] = v
 	// }
 }
+func (m *GbMmu) LoadROM() {
+	path, _ := filepath.Abs("./Tetris (World) (Rev A).gb")
+	file, err := os.Open(path)
+	if err != nil {
+		fmt.Println(err) 
+		fmt.Println("An Error Occured") 
+	}
+	stats, statsErr := file.Stat()
+    if statsErr != nil {
+        fmt.Println(statsErr) 
+		fmt.Println("An Error Occured") 
+    }
 
+    var size int64 = stats.Size()
+    bytes := make([]byte, size)
+
+    bufr := bufio.NewReader(file)
+	_,err = bufr.Read(bytes)
+
+	for k,v := range bytes{
+		m.Memory[k] = v
+	} 
+}
 func (m *GbMmu) Get(addr uint16) byte {
 	if addr < 0x100 && m.FlagBios {
 		return m.Bios[addr]

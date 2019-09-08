@@ -27,7 +27,9 @@ func main() {
 
 	for i := 0; i < 1; i++ {
         <-operationDone
-    }
+	}
 	
+	fmt.Println(core.GbPpu.Buffer)
+
 	p("|================ END ===============|")
 }
