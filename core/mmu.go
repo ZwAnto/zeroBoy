@@ -8,7 +8,7 @@ import (
 )
 
 type GbMmu struct {
-	Memory [0xffff]byte
+	Memory [0xffff+1]byte
 	Bios []byte
 	FlagBios bool
 }

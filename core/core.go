@@ -18,7 +18,7 @@ func (c *GbCore) Init() {
 	c.GbMmu.LoadROM()
 }
 
-func (c *GbCore) CpuThread(op chan bool, ppu chan bool, cpu chan bool ) {
+func (c *GbCore) CpuThread(op chan bool ) {
 
 	ticker := time.NewTicker(time.Duration(1/c.GbPpu.FPS * 1e6) * time.Microsecond )
 	stepByFrame := uint64(c.GbCpu.ClockSpeed / c.GbPpu.FPS * 1e6)
@@ -41,18 +41,26 @@ func (c *GbCore) CpuThread(op chan bool, ppu chan bool, cpu chan bool ) {
 
 			var curClock uint64 
 
-			cpu <- true
+			c.GbCpu.Trigger <- true
+
 			for curClock = 0;curClock <= stepPpu; {
 				a := c.GbMmu.Get(c.GbCpu.PC)
 			 	// fmt.Println(strconv.FormatInt(int64(c.GbCpu.PC),16) + ":" + strconv.FormatInt(int64(a),16))
 				c.GbCpu.PC ++ 
 				t := c.Opcode(a)
-				if c.GbCpu.PC == 0xe9 {
-					op <- true
+
+				if c.GbCpu.PC > 0x100 {
+					c.GbMmu.FlagBios = false
 				}
+
+				// if c.GbCpu.PC >= 0x105 {
+				// 	fmt.Println(c.GbCpu.SP)
+				// 	op <- true
+				// }
 				curClock += uint64(t)
 			}
-			<- ppu
+
+			<- c.GbPpu.Trigger
 
 			c.GbCpu.Timer += curClock
 		}

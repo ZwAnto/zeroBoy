@@ -4,15 +4,20 @@ import (
 	"github.com/zwanto/goBoy/core"
 	"fmt"
 	//"strconv"
-	// "time"
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/pixelgl"
+	"image/color"
 )
 
-// go get -u github.com/faiface/pixel/pixel
+// go get -u github.com/faiface/pixel
 // go get -u github.com/faiface/pixel/pixelgl
 
-func run() {
+func Run(core *core.GbCore) {
+	pixelgl.Run(func() {
+		run(core)
+	})
+}
+func run(core *core.GbCore) {
 	cfg := pixelgl.WindowConfig{
 		Title:  "Test",
 		Bounds: pixel.R(0, 0, 160*3, 144*3),
@@ -27,6 +32,26 @@ func run() {
 		for !win.Closed() {
 		}
 	}()
+
+	pixelMap := pixel.MakePictureData(pixel.R(0, 0, 160, 144))
+
+
+	for {
+		<- core.GbPpu.Render
+		for x := 0; x < 144; x++ {
+			for y := 0; y < 160; y++ {
+				colour := color.RGBA{R: core.GbPpu.Buffer[x][y][0], G: core.GbPpu.Buffer[x][y][1], B: core.GbPpu.Buffer[x][y][2], A: 0xFF}
+				pixelMap.Pix[(143-x)*160+y] = colour
+			}
+		}
+
+		graph := pixel.NewSprite(pixel.Picture(pixelMap), pixel.R(0, 0, 160, 144))
+		mat := pixel.IM
+		mat = mat.Moved(win.Bounds().Center())
+		mat = mat.ScaledXY(win.Bounds().Center(), pixel.V(3, 3))
+		graph.Draw(win, mat)
+		win.Update()
+	}
 }
 
 func main() {
@@ -39,24 +64,19 @@ func main() {
 	core.Init()
 	
 	operationDone := make(chan bool)
-	ppuDone := make(chan bool)
-	ppuStart := make(chan bool)
 
 	fmt.Printf("| Clock Speed : %.2f Mhz\n",core.GbCpu.ClockSpeed)
 
-	go core.CpuThread(operationDone, ppuDone, ppuStart)
-	go core.PpuThread(ppuDone, ppuStart)
+	go core.CpuThread(operationDone)
+	go core.PpuThread()
+	
+	Run(core)
 
-	for i := 0; i < 1; i++ {
-        <-operationDone
-	}
-	
-	fmt.Println(core.GbPpu.Buffer)
+	// for i := 0; i < 1; i++ {
+    //     <-operationDone
+	// }
 
-	
-	pixelgl.Run(func() {
-		run()
-	})
-	
+	// fmt.Println(core.GbMmu.Memory[0x9800:0x9bff])
+
 	p("|================ END ===============|")
 }
