@@ -34,6 +34,8 @@ func run(core *core.GbCore) {
 		for !win.Closed() {
 		}
 		core.ExitSignal = true
+		core.GbCpu.Trigger <- true
+		core.GbPpu.Trigger <- true
 	}()
 
 	pixelMap := pixel.MakePictureData(pixel.R(0, 0, 160, 144))

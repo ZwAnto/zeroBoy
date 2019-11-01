@@ -69,6 +69,6 @@ func (c *GbCore) CpuThread() {
 			<- c.GbPpu.Trigger
 
 			c.GbCpu.Timer += curClock
-		}
+		}		
 	}
 }
