@@ -9,6 +9,7 @@ type GbCore struct {
 	GbMmu GbMmu
 	GbCpu GbCpu
 	GbPpu GbPpu
+	ExitSignal bool
 }
 
 func (c *GbCore) Init() {
@@ -16,14 +17,19 @@ func (c *GbCore) Init() {
 	c.GbCpu.Init()
 	c.GbPpu.Init()
 	c.GbMmu.LoadROM()
+	c.ExitSignal = false
 }
 
-func (c *GbCore) CpuThread(op chan bool ) {
+func (c *GbCore) CpuThread() {
 
 	ticker := time.NewTicker(time.Duration(1/c.GbPpu.FPS * 1e6) * time.Microsecond )
 	stepByFrame := uint64(c.GbCpu.ClockSpeed / c.GbPpu.FPS * 1e6)
 	
 	for range ticker.C {
+
+		// Exit when window closed
+		if c.ExitSignal == true {break}
+
 		c.GbCpu.Timer = 0
 		for ;c.GbCpu.Timer <= stepByFrame; {
 
@@ -65,6 +71,4 @@ func (c *GbCore) CpuThread(op chan bool ) {
 			c.GbCpu.Timer += curClock
 		}
 	}
-
-	op <- true
 }

@@ -26,6 +26,10 @@ func (c *GbCore) PpuThread() {
 
 	i := 0
 	for ;i<1;{
+
+		// Exit when window closed
+		if c.ExitSignal == true {break}
+
 		<- c.GbCpu.Trigger
 
 		switch {

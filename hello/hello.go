@@ -18,11 +18,13 @@ func Run(core *core.GbCore) {
 	})
 }
 func run(core *core.GbCore) {
+
 	cfg := pixelgl.WindowConfig{
 		Title:  "Test",
 		Bounds: pixel.R(0, 0, 160*3, 144*3),
 		VSync:  false,
 	}
+
 	win, err := pixelgl.NewWindow(cfg)
 	if err != nil {
 		panic(err)
@@ -31,12 +33,16 @@ func run(core *core.GbCore) {
 	go func() {
 		for !win.Closed() {
 		}
+		core.ExitSignal = true
 	}()
 
 	pixelMap := pixel.MakePictureData(pixel.R(0, 0, 160, 144))
 
-
 	for {
+
+		// Exit when window closed
+		if core.ExitSignal == true {break}
+
 		<- core.GbPpu.Render
 		for x := 0; x < 144; x++ {
 			for y := 0; y < 160; y++ {
@@ -62,12 +68,10 @@ func main() {
 	p("|========== goBoy Emulator ==========|")
 
 	core.Init()
-	
-	operationDone := make(chan bool)
 
 	fmt.Printf("| Clock Speed : %.2f Mhz\n",core.GbCpu.ClockSpeed)
 
-	go core.CpuThread(operationDone)
+	go core.CpuThread()
 	go core.PpuThread()
 	
 	Run(core)
