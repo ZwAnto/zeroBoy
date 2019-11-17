@@ -55,6 +55,27 @@ func (c *GbCore) CpuThread() {
 				c.GbCpu.PC ++ 
 				t := c.Opcode(a)
 
+				// Interrupts
+				if c.GbCpu.IME & c.GbMmu.Get(0xffff) & c.GbMmu.Get(0xff0f) > 0 {
+
+					data := c.GbCpu.GetPC()
+					c.GbMmu.Set(c.GbCpu.GetSP() - 1 ,byte(data >> 8))
+					c.GbMmu.Set(c.GbCpu.GetSP() - 2 ,byte(data & 0xff))
+					c.GbCpu.SetSP(c.GbCpu.GetSP() - 2)
+
+					if c.GbMmu.Get(0xffff) & c.GbMmu.Get(0xff0f) & 0x01 > 0 {
+						c.GbCpu.SetPC(0x0040)
+					} else if c.GbMmu.Get(0xffff) & c.GbMmu.Get(0xff0f) & 0x02 > 0 {
+						c.GbCpu.SetPC(0x0048)
+					} else if c.GbMmu.Get(0xffff) & c.GbMmu.Get(0xff0f) & 0x04 > 0 {
+						c.GbCpu.SetPC(0x0050)
+					} else if c.GbMmu.Get(0xffff) & c.GbMmu.Get(0xff0f) & 0x08 > 0 {
+						c.GbCpu.SetPC(0x0058)
+					} else if c.GbMmu.Get(0xffff) & c.GbMmu.Get(0xff0f) & 0x10 > 0 {
+						c.GbCpu.SetPC(0x0060)
+					}
+				}
+
 				if c.GbCpu.PC > 0x100 {
 					c.GbMmu.FlagBios = false
 				}

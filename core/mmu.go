@@ -39,9 +39,13 @@ func (m *GbMmu) Init() {
 	// for k, v := range bytes {
 	// 	m.Memory[k] = v
 	// }
+
+	m.Set(0xffff, 0xff)
+	m.Set(0xff0f, 0x00)
+
 }
 func (m *GbMmu) LoadROM() {
-	path, _ := filepath.Abs("./Tetris (World) (Rev A).gb")
+	path, _ := filepath.Abs("./cpu_instrs.gb")
 	file, err := os.Open(path)
 	if err != nil {
 		fmt.Println(err) 

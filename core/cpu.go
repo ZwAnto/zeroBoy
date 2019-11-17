@@ -12,7 +12,7 @@ type GbCpu struct {
 	SP uint16
 	PC uint16
 
-	IME bool
+	IME byte
 	ClockSpeed float64
 	Timer uint64
 
@@ -22,6 +22,7 @@ type GbCpu struct {
 func (c *GbCpu) Init() {
 	c.ClockSpeed = 4.194304
 	c.Trigger = make(chan bool)
+	c.IME = 1
 }
 
 // BYTE REGISTER

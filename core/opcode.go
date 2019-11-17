@@ -338,7 +338,7 @@ func (c *GbCore) Opcode(a byte) byte {
 			// call
 			c.GbCpu.SetPC(val)
 			if a == 0xd9{
-				c.GbCpu.IME = true
+				c.GbCpu.IME = 1
 			}
 			t = 20
 		}
@@ -455,8 +455,13 @@ func (c *GbCore) Opcode(a byte) byte {
 		c.GbCpu.SetfC( (1 & c.GbCpu.GetA()) == 1 )
 		c.GbCpu.SetA( (c.GbCpu.GetA() >> 1) | c.GbCpu.GetfC() * 0x80 )
 
-		t = 4
-	}	
-
+		t = 4	
+	// DI
+	case 0xf3:
+		c.GbCpu.IME = 0
+	// EI
+	case 0xfb:
+		c.GbCpu.IME = 1
+	}
 	return t
 } 
