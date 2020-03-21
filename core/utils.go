@@ -6,6 +6,18 @@ func getbyte(b byte, pos uint8) byte {
 	return b >> pos & 1
 }
 
+func testbyte(b byte, pos uint8) bool {
+	return (b >> pos & 1) == 1
+}
+
+func setbyte(b *byte, pos uint8){
+	*b = *b | (0x1 << pos)
+}
+
+func clearbyte(b *byte, pos uint8){
+	*b = *b ^(1 << pos)
+}
+
 // RETRIEVING DATA 
 
 func (c *GbCore) getuint8() byte {

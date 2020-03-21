@@ -1,9 +1,14 @@
 package core
 
+// import (
+// 	// "strconv"
+// 	// "github.com/zwanto/goBoy/logger"
+// )
+
 // 8bit setter operator
 func (c *GbCore) setter_8(val byte) func(byte) {
 
-	var f func(byte) 
+	var f func(byte)
 
 	switch val {
 	// B
@@ -11,7 +16,7 @@ func (c *GbCore) setter_8(val byte) func(byte) {
 		0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47:
 		f = c.GbCpu.SetB
 	// C
-	case 0x0c, 0x0d, 0x0e, 
+	case 0x0c, 0x0d, 0x0e,
 		0x38,
 		0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f,
 		0xd8, 0xda, 0xdc:
@@ -34,7 +39,7 @@ func (c *GbCore) setter_8(val byte) func(byte) {
 		f = c.GbCpu.SetL
 	// (HL)
 	case 0x34, 0x35, 0x36,
-		0x70, 0x71, 0x72, 0x73, 0x74, 0x75,       0x77,
+		0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x77,
 		0xe9,
 		0x22, 0x32:
 		f = c.msetHL
@@ -43,7 +48,7 @@ func (c *GbCore) setter_8(val byte) func(byte) {
 		0x1a,
 		0x2a,
 		0x3a, 0x3c, 0x3d, 0x3e,
-		0x78, 0x79, 0x7a, 0x7b, 0x7c, 0x7d, 0x7e, 0x7f, 
+		0x78, 0x79, 0x7a, 0x7b, 0x7c, 0x7d, 0x7e, 0x7f,
 		0xc6, 0xce,
 		0xde,
 		0xf0, 0xf2, 0xfa:
@@ -68,23 +73,24 @@ func (c *GbCore) setter_8(val byte) func(byte) {
 
 	return f
 }
+
 // 8bit left operand
 // ADD SUB ...
 // INC, DEC
 func (c *GbCore) operand_l8(val byte) byte {
 
-	var f byte 
+	var f byte
 
 	switch val {
 
 	// B
 	case 0x80, 0x90, 0xa0, 0xb0,
-		 0x88, 0x98, 0xa8, 0xb8,
-		 0x04, 0x05:
+		0x88, 0x98, 0xa8, 0xb8,
+		0x04, 0x05:
 		f = c.GbCpu.GetB()
 	// C
 	case 0x81, 0x91, 0xa1, 0xb1,
-		0x89, 0x99, 0xa9, 0xb9, 
+		0x89, 0x99, 0xa9, 0xb9,
 		0x0c, 0x0d:
 		f = c.GbCpu.GetC()
 	// D
@@ -94,7 +100,7 @@ func (c *GbCore) operand_l8(val byte) byte {
 		f = c.GbCpu.GetD()
 	// E
 	case 0x83, 0x93, 0xa3, 0xb3,
-		0x8b, 0x9b, 0xab, 0xbb, 
+		0x8b, 0x9b, 0xab, 0xbb,
 		0x1c, 0x1d:
 		f = c.GbCpu.GetE()
 	// H
@@ -104,7 +110,7 @@ func (c *GbCore) operand_l8(val byte) byte {
 		f = c.GbCpu.GetH()
 	// L
 	case 0x85, 0x95, 0xa5, 0xb5,
-		0x8d, 0x9d, 0xad, 0xbd, 
+		0x8d, 0x9d, 0xad, 0xbd,
 		0x2c, 0x2d:
 		f = c.GbCpu.GetL()
 	// (HL)
@@ -114,21 +120,25 @@ func (c *GbCore) operand_l8(val byte) byte {
 		f = c.GbMmu.Get(c.GbCpu.GetHL())
 	// A
 	case 0x87, 0x97, 0xa7, 0xb7,
-		0x8f, 0x9f, 0xaf, 0xbf, 
+		0x8f, 0x9f, 0xaf, 0xbf,
 		0x3c, 0x3d:
 		f = c.GbCpu.GetA()
 
 	// d8
 	case 0xc6, 0xd6, 0xe6, 0xf6, 0xce, 0xde, 0xee, 0xfe:
-		f =  c.getuint8()
+		f = c.getuint8()
 	}
+
+	// logger.Log.Printf("VALUE: " + strconv.FormatInt(int64(f), 16))
+
 	return f
 }
+
 // 8bit right operand
-//LD 
+//LD
 func (c *GbCore) operand_r8(val byte) byte {
 
-	var f byte 
+	var f byte
 
 	switch val {
 	// B
@@ -161,7 +171,7 @@ func (c *GbCore) operand_r8(val byte) byte {
 		0x2a, 0x3a:
 		f = c.GbMmu.Get(c.GbCpu.GetHL())
 	// A
-	case 0x02, 0x12, 0x22, 0x32, 
+	case 0x02, 0x12, 0x22, 0x32,
 		0x47, 0x57, 0x67, 0x77,
 		0x4f, 0x5f, 0x6f, 0x7f,
 		0xe0, 0xe2, 0xea:
@@ -175,24 +185,26 @@ func (c *GbCore) operand_r8(val byte) byte {
 		f = c.GbMmu.Get(c.GbCpu.GetDE())
 	// (C)
 	case 0xf2:
-		f = c.GbMmu.Get( 0xff00 + uint16(c.GbCpu.GetC()))
+		f = c.GbMmu.Get(0xff00 + uint16(c.GbCpu.GetC()))
 	// (a16)
 	case 0xfa:
 		f = c.GbMmu.Get(c.getuint16())
 	// (a8)
 	case 0xf0:
-		f = c.GbMmu.Get( 0xff00 + uint16(c.getuint8()))
+		f = c.GbMmu.Get(0xff00 + uint16(c.getuint8()))
 	// d8
 	case 0x06, 0x16, 0x26, 0x36, 0x0e, 0x1e, 0x2e, 0x3e:
-		f =  c.getuint8()
+		f = c.getuint8()
 	}
 
+	// logger.Log.Printf("VALUE: " + strconv.FormatInt(int64(f), 16))
 	return f
 }
+
 // 16bit setter operator
 func (c *GbCore) setter_16(val byte) func(uint16) {
 
-	var f func(uint16) 
+	var f func(uint16)
 
 	switch val {
 	// BC
@@ -212,10 +224,11 @@ func (c *GbCore) setter_16(val byte) func(uint16) {
 	}
 	return f
 }
+
 // 16bit left operand
 func (c *GbCore) operand_l16(val byte) uint16 {
 
-	var f uint16 
+	var f uint16
 
 	switch val {
 	// BC
@@ -229,14 +242,17 @@ func (c *GbCore) operand_l16(val byte) uint16 {
 		f = c.GbCpu.GetHL()
 	// SP
 	case 0x33, 0x3b, 0xf5:
-	f = c.GbCpu.GetSP()
+		f = c.GbCpu.GetSP()
 	}
+
+	// logger.Log.Printf("VALUE: " + strconv.FormatInt(int64(f), 16))
 	return f
 }
+
 // 16bit right operand
 func (c *GbCore) operand_r16(val byte) uint16 {
 
-	var f uint16 
+	var f uint16
 
 	switch val {
 	// BC
@@ -256,9 +272,11 @@ func (c *GbCore) operand_r16(val byte) uint16 {
 		f = c.getuint16()
 	}
 
+	// logger.Log.Printf("VALUE: " + strconv.FormatInt(int64(f), 16))
 	return f
 }
-// Boolean 
+
+// Boolean
 func (c *GbCore) tester(val byte) bool {
 
 	var f bool
@@ -284,14 +302,14 @@ func (c *GbCore) tester(val byte) bool {
 			f = false
 		} else {
 			f = true
-	}
+		}
 	// C
 	case 0x38, 0xd8, 0xda, 0xdc:
 		if c.GbCpu.GetfC() == 1 {
 			f = true
 		} else {
 			f = false
-	}
+		}
 	// TRUE
 	case 0x18, 0xc3, 0xc9, 0xcd, 0xd9:
 		f = true

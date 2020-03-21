@@ -1,15 +1,15 @@
 package core
 
 import (
-	"os"
-	"fmt"
 	"bufio"
+	"fmt"
+	"os"
 	"path/filepath"
 )
 
 type GbMmu struct {
-	Memory [0xffff+1]byte
-	Bios []byte
+	Memory   [0xffff + 1]byte
+	Bios     []byte
 	FlagBios bool
 }
 
@@ -20,52 +20,49 @@ func (m *GbMmu) Init() {
 	path, _ := filepath.Abs("./DMG_ROM.bin")
 	file, err := os.Open(path)
 	if err != nil {
-		fmt.Println(err) 
-		fmt.Println("An Error Occured") 
+		fmt.Println(err)
+		fmt.Println("An Error Occured")
 	}
 	stats, statsErr := file.Stat()
-    if statsErr != nil {
-        fmt.Println(statsErr) 
-		fmt.Println("An Error Occured") 
-    }
+	if statsErr != nil {
+		fmt.Println(statsErr)
+		fmt.Println("An Error Occured")
+	}
 
-    var size int64 = stats.Size()
-    bytes := make([]byte, size)
+	var size int64 = stats.Size()
+	bytes := make([]byte, size)
 
-    bufr := bufio.NewReader(file)
-	_,err = bufr.Read(bytes)
+	bufr := bufio.NewReader(file)
+	_, err = bufr.Read(bytes)
 
 	m.Bios = bytes
-	// for k, v := range bytes {
-	// 	m.Memory[k] = v
-	// }
 
 	m.Set(0xffff, 0xff)
 	m.Set(0xff0f, 0x00)
 
 }
 func (m *GbMmu) LoadROM() {
-	path, _ := filepath.Abs("./cpu_instrs.gb")
+	path, _ := filepath.Abs("./TESTGAME.GB")
 	file, err := os.Open(path)
 	if err != nil {
-		fmt.Println(err) 
-		fmt.Println("An Error Occured") 
+		fmt.Println(err)
+		fmt.Println("An Error Occured")
 	}
 	stats, statsErr := file.Stat()
-    if statsErr != nil {
-        fmt.Println(statsErr) 
-		fmt.Println("An Error Occured") 
-    }
+	if statsErr != nil {
+		fmt.Println(statsErr)
+		fmt.Println("An Error Occured")
+	}
 
-    var size int64 = stats.Size()
-    bytes := make([]byte, size)
+	var size int64 = stats.Size()
+	bytes := make([]byte, size)
 
-    bufr := bufio.NewReader(file)
-	_,err = bufr.Read(bytes)
+	bufr := bufio.NewReader(file)
+	_, err = bufr.Read(bytes)
 
-	for k,v := range bytes{
+	for k, v := range bytes {
 		m.Memory[k] = v
-	} 
+	}
 }
 func (m *GbMmu) Get(addr uint16) byte {
 	if addr < 0x100 && m.FlagBios {

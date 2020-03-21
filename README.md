@@ -15,7 +15,7 @@ A GameBoy emulator written in go
 * Memory [link](http://gameboy.mongenel.com/dmg/asmmemmap.html)
 
 ### Instruction set
-* Half-Carry Flag [link](https://robdor.com/2016/08/10/)gameboy-emulator-half-carry-flag/  
+* Half-Carry Flag [link](https://robdor.com/2016/08/10/gameboy-emulator-half-carry-flag/)
 * Opcode detail [link1](http://devrs.com/gb/files/GBCPU_Instr.html) [link2](http://devrs.com/gb/files/opcodes.html)
 * Opcode Table [link](http://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html)
 
@@ -26,13 +26,15 @@ A GameBoy emulator written in go
 ### ROM
 * http://gbdev.gg8.se/wiki/articles/Gameboy_Bootstrap_ROM
 * https://realboyemulator.wordpress.com/2013/01/03/a-look-at-the-game-boy-bootstrap-let-the-fun-begin/
+* http://opusgames.com/games/GBDev/GBDev.html
 
+
+### PALETTE
+* https://lospec.com/palette-list/tag/gameboy
 
 https://amp.reddit.com/r/EmuDev/comments/4ojqyl/gameboy_whats_the_simplest_rom_to_start_testing/
 
 
-https://bioinfo-fr.net/cython-votre-programme-python-mais-100x-plus-vite
-http://docs.cython.org/en/latest/src/quickstart/build.html
 https://gist.github.com/rogerallen/f06ba704ce3befb5459239e3fdf842c7
 
 https://github.com/faiface/gui
