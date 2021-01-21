@@ -38,7 +38,8 @@ func (c *GbCore) PpuThread() {
 		<-c.GbCpu.Trigger
 
 		requestInterrupt := false
-
+		requestInterruptVBL := false
+		
 		switch {
 
 		////////////// HBLANK //////////////
@@ -48,7 +49,8 @@ func (c *GbCore) PpuThread() {
 			if c.GbPpu.Line == 144 { // if last line...
 
 				c.GbPpu.Mode = 1 // ...go VBLANK
-				requestInterrupt = getbyte(c.GbMmu.Get(0xff41), 4) == 1
+				requestInterrupt = (getbyte(c.GbMmu.Get(0xff41), 4) == 1) || (getbyte(c.GbMmu.Get(0xff41), 5) == 1) // STAT INTERRUPT
+				requestInterruptVBL = true
 
 				c.GbPpu.Render <- true
 
@@ -92,9 +94,21 @@ func (c *GbCore) PpuThread() {
 		c.GbMmu.Set(0xff44, c.GbPpu.Line)
 		c.GbMmu.Set(0xff41, c.GbMmu.Get(0xff41)&0xfc+c.GbPpu.Mode)
 
+		if requestInterruptVBL {
+			c.requestInterrupt(0) // VBLANK INTERRUPT
+		}
 		if requestInterrupt {
 			c.requestInterrupt(1)
 		}
+		if c.GbMmu.Get(0xff44) == c.GbMmu.Get(0xff45) {
+			setbyte(&c.GbMmu.Memory[0xff41], 2)
+			if getbyte(c.GbMmu.Get(0xff41), 6) == 1 {
+				c.requestInterrupt(1)
+			}
+		} else {
+			clearbyte(&c.GbMmu.Memory[0xff41], 2)
+		}
+
 
 		c.GbPpu.Trigger <- true
 	}

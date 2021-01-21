@@ -59,7 +59,11 @@ func run(core *core.GbCore) {
 		mat = mat.ScaledXY(win.Bounds().Center(), pixel.V(3, 3))
 		graph.Draw(win, mat)
 		win.Update()
-		// fmt.Println(core.GbMmu.Memory[0xff42:0xff44])
+		// fmt.Println("=====================")
+		// fmt.Println(core.GbMmu.Get(0xff0f))
+		// fmt.Println(core.GbCpu.IME)
+		// fmt.Println(core.GbMmu.Get(0xff42))
+		// fmt.Println(core.GbCpu.IME * core.GbMmu.Get(0xffff)&core.GbMmu.Get(0xff0f)>0)
 	}
 }
 

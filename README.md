@@ -14,6 +14,9 @@ A GameBoy emulator written in go
 * Spec of Gameboy [link](https://problemkaputt.de/pandocs.htm)
 * Memory [link](http://gameboy.mongenel.com/dmg/asmmemmap.html)
 
+### Cycle
+* The Cycle Accurate GameBoy Docs [link](https://github.com/AntonioND/giibiiadvance/blob/master/docs/TCAGBD.pdf)
+
 ### Instruction set
 * Half-Carry Flag [link](https://robdor.com/2016/08/10/gameboy-emulator-half-carry-flag/)
 * Opcode detail [link1](http://devrs.com/gb/files/GBCPU_Instr.html) [link2](http://devrs.com/gb/files/opcodes.html)

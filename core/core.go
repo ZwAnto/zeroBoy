@@ -58,7 +58,7 @@ func (c *GbCore) CpuThread() {
 
 			for curClock = 0; curClock <= stepPpu; {
 				a := c.GbMmu.Get(c.GbCpu.PC)
-				// fmt.Println(strconv.FormatInt(int64(c.GbCpu.PC),16) + ":" + strconv.FormatInt(int64(a),16))
+				//fmt.Println(strconv.FormatInt(int64(c.GbCpu.PC),16) + ":" + strconv.FormatInt(int64(a),16))
 
 				// if c.GbMmu.FlagBios == false {
 				// 	logger.Log.Printf("PC: " + strconv.FormatInt(int64(c.GbCpu.PC), 16))
@@ -66,28 +66,32 @@ func (c *GbCore) CpuThread() {
 				// }
 
 				c.GbCpu.PC++
-				t := c.Opcode(a)
 
 				// Interrupts
-				if c.GbCpu.IME&c.GbMmu.Get(0xffff)&c.GbMmu.Get(0xff0f) > 0 {
+				if c.GbCpu.IME*c.GbMmu.Get(0xffff)&c.GbMmu.Get(0xff0f) > 0 {
 
 					data := c.GbCpu.GetPC()
 					c.GbMmu.Set(c.GbCpu.GetSP()-1, byte(data>>8))
 					c.GbMmu.Set(c.GbCpu.GetSP()-2, byte(data&0xff))
 					c.GbCpu.SetSP(c.GbCpu.GetSP() - 2)
 
+					// VBLANK INTERRUPT
 					if c.GbMmu.Get(0xffff)&c.GbMmu.Get(0xff0f)&0x01 > 0 {
 						c.GbCpu.SetPC(0x0040)
 						c.GbMmu.Set(0xff0f, c.GbMmu.Get(0xff0f)&(255-0x1))
+					// LCD-STAT INTERRUPT
 					} else if c.GbMmu.Get(0xffff)&c.GbMmu.Get(0xff0f)&0x02 > 0 {
 						c.GbCpu.SetPC(0x0048)
 						c.GbMmu.Set(0xff0f, c.GbMmu.Get(0xff0f)&(255-0x2))
+					// TIMER INTERRUPT
 					} else if c.GbMmu.Get(0xffff)&c.GbMmu.Get(0xff0f)&0x04 > 0 {
 						c.GbCpu.SetPC(0x0050)
 						c.GbMmu.Set(0xff0f, c.GbMmu.Get(0xff0f)&(255-0x4))
+					// SERIAL INTERRUPT
 					} else if c.GbMmu.Get(0xffff)&c.GbMmu.Get(0xff0f)&0x08 > 0 {
 						c.GbCpu.SetPC(0x0058)
 						c.GbMmu.Set(0xff0f, c.GbMmu.Get(0xff0f)&(255-0x8))
+					// JOYPAD INTERRUPT
 					} else if c.GbMmu.Get(0xffff)&c.GbMmu.Get(0xff0f)&0x10 > 0 {
 						c.GbCpu.SetPC(0x0060)
 						c.GbMmu.Set(0xff0f, c.GbMmu.Get(0xff0f)&(255-0x10))
@@ -138,8 +142,11 @@ func (c *GbCore) CpuThread() {
 						c.GbMmu.Set(0xFFFF, 0x00)
 
 						c.GbMmu.FlagBios = false
+
 					}
 				}
+
+				t := c.Opcode(a)
 
 				// if c.GbCpu.PC >= 0x105 {
 				// 	fmt.Println(c.GbCpu.SP)
