@@ -50,7 +50,7 @@ func (c *GbCore) PpuThread() {
 
 				c.GbPpu.Mode = 1 // ...go VBLANK
 				requestInterrupt = (getbyte(c.GbMmu.Get(0xff41), 4) == 1) || (getbyte(c.GbMmu.Get(0xff41), 5) == 1) // STAT INTERRUPT
-				requestInterruptVBL = true
+				// requestInterruptVBL = true
 
 				c.GbPpu.Render <- true
 
