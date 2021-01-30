@@ -1,76 +1,25 @@
 package core
 
 import (
-	"bufio"
-	"fmt"
-	"os"
-	"path/filepath"
+	log "github.com/sirupsen/logrus"
 )
 
-type GbMmu struct {
-	Memory   [0xffff + 1]byte
-	Bios     []byte
-	FlagBios bool
-}
+type Mmu struct {
 
-func (m *GbMmu) Init() {
-
-	m.FlagBios = true
-
-	path, _ := filepath.Abs("./DMG_ROM.bin")
-	file, err := os.Open(path)
-	if err != nil {
-		fmt.Println(err)
-		fmt.Println("An Error Occured")
-	}
-	stats, statsErr := file.Stat()
-	if statsErr != nil {
-		fmt.Println(statsErr)
-		fmt.Println("An Error Occured")
-	}
-
-	var size int64 = stats.Size()
-	bytes := make([]byte, size)
-
-	bufr := bufio.NewReader(file)
-	_, err = bufr.Read(bytes)
-
-	m.Bios = bytes
-
-	m.Set(0xffff, 0xff)
-	m.Set(0xff0f, 0x00)
+	Memory [0xffff + 1]byte
 
 }
-func (m *GbMmu) LoadROM() {
-	path, _ := filepath.Abs("./TESTGAME.GB")
-	file, err := os.Open(path)
-	if err != nil {
-		fmt.Println(err)
-		fmt.Println("An Error Occured")
-	}
-	stats, statsErr := file.Stat()
-	if statsErr != nil {
-		fmt.Println(statsErr)
-		fmt.Println("An Error Occured")
-	}
 
-	var size int64 = stats.Size()
-	bytes := make([]byte, size)
+func (m *Mmu) Rb(addr uint16) byte {
+	log.Debug("Reading byte at ", addr, " from memory and get ", m.Memory[addr])
 
-	bufr := bufio.NewReader(file)
-	_, err = bufr.Read(bytes)
-
-	for k, v := range bytes {
-		m.Memory[k] = v
-	}
-}
-func (m *GbMmu) Get(addr uint16) byte {
-	if addr < 0x100 && m.FlagBios {
-		return m.Bios[addr]
-	}
 	return m.Memory[addr]
 }
 
-func (m *GbMmu) Set(addr uint16, value byte) {
+func (m *Mmu) Wb(addr uint16, value byte) {
+	log.Debug("Writing byte at ", addr, " to memory with ", value)
+
 	m.Memory[addr] = value
+
 }
+
