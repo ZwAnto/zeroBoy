@@ -1,6 +1,7 @@
 #  zeroBoy Emualtor
 
-A GameBoy emulator written in go
+A GameBoy emulator written in go. This is an educationnal project in order to learn go and get some basic hardware knowledge.  
+The objective is to build a functionnal GameBoy using Raspberry Pi Zero and my 3D printer.
 
 ## References
 
