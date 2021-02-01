@@ -148,7 +148,6 @@ func (c *Cpu) Instruction(op uint16) {
 
 	case 0x40: // LD B, B
 		c.Time += 4
-		c.B = c.B
 	case 0x41: // LD B, C
 		c.Time += 4
 		c.B = c.C
@@ -177,7 +176,6 @@ func (c *Cpu) Instruction(op uint16) {
 		c.C = c.B
 	case 0x49: // LD C, C
 		c.Time += 4
-		c.C = c.C
 	case 0x4A: // LD C, D
 		c.Time += 4
 		c.C = c.D
@@ -206,7 +204,6 @@ func (c *Cpu) Instruction(op uint16) {
 		c.D = c.C
 	case 0x52: // LD D, D
 		c.Time += 4
-		c.D = c.D
 	case 0x53: // LD D, E
 		c.Time += 4
 		c.D = c.E
@@ -235,7 +232,6 @@ func (c *Cpu) Instruction(op uint16) {
 		c.E = c.D
 	case 0x5B: // LD E, E
 		c.Time += 4
-		c.E = c.E
 	case 0x5C: // LD E, H
 		c.Time += 4
 		c.E = c.H
@@ -264,7 +260,6 @@ func (c *Cpu) Instruction(op uint16) {
 		c.H = c.E
 	case 0x64: // LD H, H
 		c.Time += 4
-		c.H = c.H
 	case 0x65: // LD H, L
 		c.Time += 4
 		c.H = c.L
@@ -293,7 +288,6 @@ func (c *Cpu) Instruction(op uint16) {
 		c.L = c.H
 	case 0x6D: // LD L, L
 		c.Time += 4
-		c.L = c.L
 	case 0x6E: // LD L, (HL)
 		c.Time += 8
 		addr := uint16(c.H)<<8 + uint16(c.L)
@@ -358,7 +352,6 @@ func (c *Cpu) Instruction(op uint16) {
 		c.A = c.Mmu.Rb(addr)
 	case 0x7F: // LD A, A
 		c.Time += 4
-		c.A = c.A
 
 	case 0x80: // ADD A, B
 		c.Time += 4
