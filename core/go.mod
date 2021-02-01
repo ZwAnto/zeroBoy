@@ -1,4 +1,4 @@
-module github.com/zwanto/goBoy/core
+module github.com/zwanto/zeroBoy/core
 
 go 1.15
 

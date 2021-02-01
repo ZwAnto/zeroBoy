@@ -1,4 +1,4 @@
-#  goBoy Emualtor
+#  zeroBoy Emualtor
 
 A GameBoy emulator written in go
 

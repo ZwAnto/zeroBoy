@@ -18,6 +18,51 @@ type Cpu struct {
 	Mmu *Mmu
 }
 
+// FLAGS
+// Get
+func (c *Cpu) GetfZ() byte {
+	return c.F >> 7
+}
+func (c *Cpu) GetfS() byte {
+	return (c.F >> 6) & 1
+}
+func (c *Cpu) GetfH() byte {
+	return (c.F >> 5) & 1
+}
+func (c *Cpu) GetfC() byte {
+	return (c.F >> 4) & 1
+}
+
+// Set
+func (c *Cpu) SetfZ(val bool) {
+	if val {
+		c.F = c.F | (1 << 7)
+	} else {
+		c.F = c.F &^ (1 << 7)
+	}
+}
+func (c *Cpu) SetfS(val bool) {
+	if val {
+		c.F = c.F | (1 << 6)
+	} else {
+		c.F = c.F &^ (1 << 6)
+	}
+}
+func (c *Cpu) SetfH(val bool) {
+	if val {
+		c.F = c.F | (1 << 5)
+	} else {
+		c.F = c.F &^ (1 << 5)
+	}
+}
+func (c *Cpu) SetfC(val bool) {
+	if val {
+		c.F = c.F | (1 << 4)
+	} else {
+		c.F = c.F &^ (1 << 4)
+	}
+}
+
 func (c *Cpu) Instruction(op uint16) {
 
 	switch op {
@@ -585,7 +630,7 @@ func (c *Cpu) add8(y byte) {
 	add := uint16(c.A) + uint16(y)
 	add4 := uint16(c.A&0xf) + uint16(y&0xf)
 
-	c.SetfZ(add == 0)
+	c.SetfZ(byte(add) == 0)
 	c.SetfS(false)
 	c.SetfH(add4 > 0xf)
 	c.SetfC(add > 0xff)
@@ -599,7 +644,7 @@ func (c *Cpu) adc8(y byte) {
 	add := uint16(c.A) + uint16(y) + carry
 	add4 := uint16(c.A&0xf) + uint16(y&0xf) + carry&0xf
 
-	c.SetfZ(add == 0)
+	c.SetfZ(byte(add) == 0)
 	c.SetfS(false)
 	c.SetfH(add4 > 0xf)
 	c.SetfC(add > 0xff)
@@ -609,12 +654,11 @@ func (c *Cpu) adc8(y byte) {
 
 func (c *Cpu) sub8(y byte) {
 	sub := uint16(c.A) - uint16(y)
-	sub4 := uint16(c.A&0xf) - uint16(y&0xf)
 
 	c.SetfZ(sub == 0)
 	c.SetfS(true)
-	c.SetfH(sub4 < 0)
-	c.SetfC(sub < 0)
+	c.SetfH(y&0xf > c.A&0xf)
+	c.SetfC(y > c.A)
 
 	c.A = byte(sub)
 }
@@ -624,12 +668,11 @@ func (c *Cpu) sbc8(y byte) {
 	carry := uint16(c.GetfC())
 
 	sub := uint16(c.A) - uint16(y) - carry
-	sub4 := uint16(c.A&0xf) - uint16(y&0xf) - carry&0xf
 
 	c.SetfZ(sub == 0)
 	c.SetfS(true)
-	c.SetfH(sub4 < 0)
-	c.SetfC(sub < 0)
+	c.SetfH(uint16(c.A&0xf) < uint16(y&0xf)+carry&0xf)
+	c.SetfC(uint16(c.A) < uint16(y)+carry)
 
 	c.A = byte(sub)
 }
@@ -671,58 +714,8 @@ func (c *Cpu) or8(y byte) {
 }
 
 func (c *Cpu) cp8(y byte) {
-	sub := uint16(c.A) - uint16(y)
-	sub4 := uint16(c.A&0xf) - uint16(y&0xf)
-
-	c.SetfZ(sub == 0)
+	c.SetfZ(c.A == y)
 	c.SetfS(true)
-	c.SetfH(sub4 < 0)
-	c.SetfC(sub < 0)
-
-	c.A = byte(sub)
-}
-
-// FLAGS
-// Get
-func (c *Cpu) GetfZ() byte {
-	return c.F >> 7
-}
-func (c *Cpu) GetfS() byte {
-	return (c.F >> 6) & 1
-}
-func (c *Cpu) GetfH() byte {
-	return (c.F >> 5) & 1
-}
-func (c *Cpu) GetfC() byte {
-	return (c.F >> 4) & 1
-}
-
-// Set
-func (c *Cpu) SetfZ(val bool) {
-	if val {
-		c.F = c.F | (1 << 7)
-	} else {
-		c.F = c.F &^ (1 << 7)
-	}
-}
-func (c *Cpu) SetfS(val bool) {
-	if val {
-		c.F = c.F | (1 << 6)
-	} else {
-		c.F = c.F &^ (1 << 6)
-	}
-}
-func (c *Cpu) SetfH(val bool) {
-	if val {
-		c.F = c.F | (1 << 5)
-	} else {
-		c.F = c.F &^ (1 << 5)
-	}
-}
-func (c *Cpu) SetfC(val bool) {
-	if val {
-		c.F = c.F | (1 << 4)
-	} else {
-		c.F = c.F &^ (1 << 4)
-	}
+	c.SetfH(c.A&0xf < y&0xf)
+	c.SetfC(c.A < y)
 }
