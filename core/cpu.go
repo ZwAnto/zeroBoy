@@ -238,9 +238,8 @@ func (c *Cpu) Instruction(op uint16) {
 		// NOT SURE
 		c.Time += 20
 		w_addr := c.read16()
-		val := *c.Mmu.Rb(c.SP)
-		c.Mmu.Wb(w_addr, byte(val&0xff))
-		c.Mmu.Wb(w_addr, byte(val>>8))
+		c.Mmu.Wb(w_addr, byte(c.SP&0xff))
+		c.Mmu.Wb(w_addr+1, byte(c.SP>>8))
 
 	case 0x09:
 	case 0x0A: // LD A, (BC)
@@ -921,7 +920,6 @@ func (c *Cpu) Instruction(op uint16) {
 
 		c.H = byte(val >> 8)
 		c.L = byte(val & 0xff)
-
 	case 0xF9: // LD SP, HL
 		c.Time += 8
 		val := uint16(c.H)<<8 + uint16(c.L)
