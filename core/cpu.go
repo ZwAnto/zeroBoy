@@ -63,20 +63,20 @@ func (c *Cpu) SetfC(val bool) {
 	}
 }
 
-func(c *Cpu) Inc16(l *byte, r *byte) {
+func (c *Cpu) Inc16(l *byte, r *byte) {
 	r16 := uint16(*l)<<8 + uint16(*r)
 	r16 = r16 + 1
-	*l = byte(r16>>8)
-	*r = byte(r16&0xff)
+	*l = byte(r16 >> 8)
+	*r = byte(r16 & 0xff)
 }
-func(c *Cpu) Dec16(l *byte, r *byte) {
+func (c *Cpu) Dec16(l *byte, r *byte) {
 	r16 := uint16(*l)<<8 + uint16(*r)
 	r16 = r16 - 1
-	*l = byte(r16>>8)
-	*r = byte(r16&0xff)
+	*l = byte(r16 >> 8)
+	*r = byte(r16 & 0xff)
 }
 
-func(c *Cpu) Inc8(r *byte) {
+func (c *Cpu) Inc8(r *byte) {
 	val := *r + 1
 	val4 := uint16(*r&0xf) + 1
 
@@ -87,7 +87,7 @@ func(c *Cpu) Inc8(r *byte) {
 	*r = val
 }
 
-func(c *Cpu) Dec8(r *byte) {
+func (c *Cpu) Dec8(r *byte) {
 	val := *r - 1
 
 	c.SetfZ(val == 0)
@@ -214,8 +214,8 @@ func (c *Cpu) Instruction(op uint16) {
 	case 0x01: // LD BC, d16
 		c.Time += 12
 		val := c.read16()
-		c.B = byte(val>>8)
-		c.C = byte(val&0xff)
+		c.B = byte(val >> 8)
+		c.C = byte(val & 0xff)
 	case 0x02: // LD (BC), A
 		c.Time += 8
 		addr := uint16(c.B)<<8 + uint16(c.C)
@@ -235,11 +235,13 @@ func (c *Cpu) Instruction(op uint16) {
 	case 0x07:
 
 	case 0x08: // LD (a8), SP
-
-		//TODO
+		// NOT SURE
 		c.Time += 20
-		addr := c.read16()
-		c.Mmu.Wb(addr, c.SP)
+		w_addr := c.read16()
+		val := *c.Mmu.Rb(c.SP)
+		c.Mmu.Wb(w_addr, byte(val&0xff))
+		c.Mmu.Wb(w_addr, byte(val>>8))
+
 	case 0x09:
 	case 0x0A: // LD A, (BC)
 		c.Time += 8
@@ -264,8 +266,8 @@ func (c *Cpu) Instruction(op uint16) {
 	case 0x11: // LD DE, d16
 		c.Time += 12
 		val := c.read16()
-		c.D = byte(val>>8)
-		c.E = byte(val&0xff)
+		c.D = byte(val >> 8)
+		c.E = byte(val & 0xff)
 	case 0x12: // LD (DE), A
 		c.Time += 8
 		addr := uint16(c.D)<<8 + uint16(c.E)
@@ -308,13 +310,13 @@ func (c *Cpu) Instruction(op uint16) {
 	case 0x21: // LD HL, d16
 		c.Time += 12
 		val := c.read16()
-		c.H = byte(val>>8)
-		c.L = byte(val&0xff)
+		c.H = byte(val >> 8)
+		c.L = byte(val & 0xff)
 	case 0x22: // LD (HL+), A
 		c.Time += 8
 		addr := uint16(c.H)<<8 + uint16(c.L)
 		c.Mmu.Wb(addr, c.A)
-		c.Inc16(&c.H,&c.L)
+		c.Inc16(&c.H, &c.L)
 	case 0x23: // INC HL
 		c.Time += 8
 		c.Inc16(&c.H, &c.L)
@@ -335,7 +337,7 @@ func (c *Cpu) Instruction(op uint16) {
 		c.Time += 8
 		addr := uint16(c.H)<<8 + uint16(c.L)
 		c.A = *c.Mmu.Rb(addr)
-		c.Inc16(&c.H,&c.L)
+		c.Inc16(&c.H, &c.L)
 	case 0x2B: // DEC HL
 		c.Time += 8
 		c.Dec16(&c.H, &c.L)
@@ -358,7 +360,7 @@ func (c *Cpu) Instruction(op uint16) {
 		c.Time += 8
 		addr := uint16(c.H)<<8 + uint16(c.L)
 		c.Mmu.Wb(addr, c.A)
-		c.Dec16(&c.H,&c.L)
+		c.Dec16(&c.H, &c.L)
 	case 0x33: // INC SP
 		c.Time += 8
 		c.SP += 1
@@ -382,7 +384,7 @@ func (c *Cpu) Instruction(op uint16) {
 		c.Time += 8
 		addr := uint16(c.H)<<8 + uint16(c.L)
 		c.A = *c.Mmu.Rb(addr)
-		c.Dec16(&c.H,&c.L)
+		c.Dec16(&c.H, &c.L)
 	case 0x3B: // DEC SP
 		c.Time += 8
 		c.SP -= 1
@@ -856,9 +858,15 @@ func (c *Cpu) Instruction(op uint16) {
 		c.sbc8(c.read8())
 	case 0xDF:
 
-	case 0xE0:
+	case 0xE0: // LDH (a8), A
+		c.Time += 12
+		addr := uint16(0xff00) + uint16(c.read8())
+		c.Mmu.Wb(addr, c.A)
 	case 0xE1:
-	case 0xE2:
+	case 0xE2: // LDH (C), A
+		c.Time += 8
+		addr := uint16(0xff00) + uint16(c.C)
+		c.Mmu.Wb(addr, c.A)
 	case 0xE3:
 	case 0xE4:
 	case 0xE5:
@@ -869,7 +877,10 @@ func (c *Cpu) Instruction(op uint16) {
 
 	case 0xE8:
 	case 0xE9:
-	case 0xEA:
+	case 0xEA: // LD (a16), A
+		c.Time += 16
+		addr := c.read16()
+		c.Mmu.Wb(addr, c.A)
 	case 0xEB:
 	case 0xEC:
 	case 0xED:
@@ -878,9 +889,15 @@ func (c *Cpu) Instruction(op uint16) {
 		c.xor8(c.read8())
 	case 0xEF:
 
-	case 0xF0:
+	case 0xF0: // LDH A, (a8)
+		c.Time += 12
+		addr := uint16(0xff00) + uint16(c.read8())
+		c.A = *c.Mmu.Rb(addr)
 	case 0xF1:
-	case 0xF2:
+	case 0xF2: // LDH A, (C)
+		c.Time += 8
+		addr := uint16(0xff00) + uint16(c.C)
+		c.A = *c.Mmu.Rb(addr)
 	case 0xF3:
 	case 0xF4:
 	case 0xF5:
@@ -889,9 +906,30 @@ func (c *Cpu) Instruction(op uint16) {
 		c.or8(c.read8())
 	case 0xF7:
 
-	case 0xF8:
-	case 0xF9:
-	case 0xFA:
+	case 0xF8: // LD HL,SP+r8
+		// NOT SURE
+		c.Time += 12
+		r8 := c.read8()
+		val := uint16(int16(c.SP) + int16(r8))
+
+		tmpVal := c.SP ^ uint16(r8) ^ val
+
+		c.SetfZ(false)
+		c.SetfH(false)
+		c.SetfH((tmpVal & 0x10) == 0x10)
+		c.SetfC((tmpVal & 0x100) == 0x100)
+
+		c.H = byte(val >> 8)
+		c.L = byte(val & 0xff)
+
+	case 0xF9: // LD SP, HL
+		c.Time += 8
+		val := uint16(c.H)<<8 + uint16(c.L)
+		c.SP = val
+	case 0xFA: // LD A, (a16)
+		c.Time += 16
+		addr := c.read16()
+		c.A = *c.Mmu.Rb(addr)
 	case 0xFB:
 	case 0xFC:
 	case 0xFD:
