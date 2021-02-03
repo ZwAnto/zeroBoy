@@ -10,10 +10,10 @@ type Mmu struct {
 
 }
 
-func (m *Mmu) Rb(addr uint16) byte {
+func (m *Mmu) Rb(addr uint16) *byte {
 	log.Debug("Reading byte at ", addr, " from memory and get ", m.Memory[addr])
 
-	return m.Memory[addr]
+	return &m.Memory[addr]
 }
 
 func (m *Mmu) Wb(addr uint16, value byte) {

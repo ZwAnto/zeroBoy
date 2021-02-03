@@ -17,7 +17,7 @@ func TestRb(t *testing.T) {
 	m := new(Mmu)
 	m.Wb(0xffff, 1)
 
-    if m.Rb(0xffff) != 1 {
+    if *m.Rb(0xffff) != 1 {
         t.Errorf("Read %d from 0xffff; Must be 1", m.Rb(0xffff))
     }
 }
