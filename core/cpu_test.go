@@ -196,3 +196,16 @@ func TestCp(t *testing.T) {
 	c.cp8(0b110000)
 	assert.Equal(byte(0b0101<<4), c.F)
 }
+
+// JR
+func TestJr(t *testing.T) {
+	assert := assert.New(t)
+	m := new(Mmu)
+	c := new(Cpu)
+	c.Mmu = m
+
+	c.Mmu.Wb(0,3)
+
+	c.jr(true)
+	assert.Equal(uint16(4), c.PC)
+}

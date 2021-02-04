@@ -206,6 +206,26 @@ func (c *Cpu) cp8(y byte) {
 	c.SetfC(c.A < y)
 }
 
+func (c *Cpu) jr(cc bool) {
+	d8 := c.read8()
+	if cc {
+		c.Time += 12
+		c.PC = uint16(int32(c.PC) + int32(d8))
+	} else {
+		c.Time += 8
+	}
+}
+
+func (c *Cpu) jp(cc bool) {
+	d16 := c.read16()
+	if cc {
+		c.Time += 16
+		c.PC = d16
+	} else {
+		c.Time += 12
+	}
+}
+
 func (c *Cpu) Instruction(op uint16) {
 
 	switch op {
@@ -285,7 +305,8 @@ func (c *Cpu) Instruction(op uint16) {
 		c.D = c.read8()
 	case 0x17:
 
-	case 0x18:
+	case 0x18: // JR a8
+		c.jr(true)
 	case 0x19:
 	case 0x1A: // LD A, (DE)
 		c.Time += 8
@@ -305,7 +326,8 @@ func (c *Cpu) Instruction(op uint16) {
 		c.E = c.read8()
 	case 0x1F:
 
-	case 0x20:
+	case 0x20: // JR NZ, r8
+		c.jr(c.GetfZ()==0)
 	case 0x21: // LD HL, d16
 		c.Time += 12
 		val := c.read16()
@@ -330,7 +352,8 @@ func (c *Cpu) Instruction(op uint16) {
 		c.H = c.read8()
 	case 0x27:
 
-	case 0x28:
+	case 0x28: // JR Z, r8
+		c.jr(c.GetfZ()==1)
 	case 0x29:
 	case 0x2A: // LD A, (HL+)
 		c.Time += 8
@@ -351,7 +374,8 @@ func (c *Cpu) Instruction(op uint16) {
 		c.L = c.read8()
 	case 0x2F:
 
-	case 0x30:
+	case 0x30: // JR NC, r8
+		c.jr(c.GetfC()==0)
 	case 0x31: // LD SP, d16
 		c.Time += 12
 		c.SP = c.read16()
@@ -377,7 +401,8 @@ func (c *Cpu) Instruction(op uint16) {
 		c.Mmu.Wb(addr, c.read8())
 	case 0x37:
 
-	case 0x38:
+	case 0x38: // JR C, r8
+		c.jr(c.GetfC()==1)
 	case 0x39:
 	case 0x3A: // LD A, (HL-)
 		c.Time += 8
@@ -815,8 +840,10 @@ func (c *Cpu) Instruction(op uint16) {
 
 	case 0xC0:
 	case 0xC1:
-	case 0xC2:
-	case 0xC3:
+	case 0xC2: // JPNZ, a16
+		c.jp(c.GetfZ()==0)
+	case 0xC3: // JP a16
+		c.jp(true)
 	case 0xC4:
 	case 0xC5:
 	case 0xC6: // ADD A, d8
@@ -826,7 +853,8 @@ func (c *Cpu) Instruction(op uint16) {
 
 	case 0xC8:
 	case 0xC9:
-	case 0xCA:
+	case 0xCA: // JPZ, a16
+	c.jp(c.GetfZ()==1)
 	case 0xCB:
 	case 0xCC:
 	case 0xCD:
@@ -837,7 +865,8 @@ func (c *Cpu) Instruction(op uint16) {
 
 	case 0xD0:
 	case 0xD1:
-	case 0xD2:
+	case 0xD2: // JPNC, a16
+		c.jp(c.GetfC()==0)
 	case 0xD3:
 	case 0xD4:
 	case 0xD5:
@@ -848,7 +877,8 @@ func (c *Cpu) Instruction(op uint16) {
 
 	case 0xD8:
 	case 0xD9:
-	case 0xDA:
+	case 0xDA: // JP C, a16
+		c.jp(c.GetfC()==1)
 	case 0xDB:
 	case 0xDC:
 	case 0xDD:
@@ -909,7 +939,7 @@ func (c *Cpu) Instruction(op uint16) {
 		// NOT SURE
 		c.Time += 12
 		r8 := c.read8()
-		val := uint16(int16(c.SP) + int16(r8))
+		val := uint16(int32(c.SP) + int32(r8))
 
 		tmpVal := c.SP ^ uint16(r8) ^ val
 
