@@ -106,7 +106,7 @@ func (c *Cpu) read8() byte {
 func (c *Cpu) read16() uint16 {
 	val := uint16(*c.Mmu.Rb(c.PC))
 	c.PC = c.PC + 1
-	val = val<<8 + uint16(*c.Mmu.Rb(c.PC))
+	val = val + uint16(*c.Mmu.Rb(c.PC)) << 8
 	c.PC = c.PC + 1
 
 	return val
@@ -252,7 +252,13 @@ func (c *Cpu) Instruction(op uint16) {
 	case 0x06: // LD B, d8
 		c.Time += 8
 		c.B = c.read8()
-	case 0x07:
+	case 0x07: // RLCA
+		c.Time += 4
+		c.SetfZ(false)
+		c.SetfS(false)
+		c.SetfH(false)
+		c.SetfC(c.A>>7==1)
+		c.A = c.A<<1 | c.A >> 7
 
 	case 0x08: // LD (a8), SP
 		// NOT SURE
@@ -278,7 +284,13 @@ func (c *Cpu) Instruction(op uint16) {
 	case 0x0E: // LD C, d8
 		c.Time += 8
 		c.C = c.read8()
-	case 0x0F:
+	case 0x0F: // RRCA
+		c.Time += 4
+		c.SetfZ(false)
+		c.SetfS(false)
+		c.SetfH(false)
+		c.SetfC(c.A&1==1)
+		c.A = c.A>>1 | ((c.A&1)<<7)
 
 	case 0x10: // STOP TODO
 		c.Time += 4 // TODO Check what it does

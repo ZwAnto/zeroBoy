@@ -83,8 +83,8 @@ func TestRead16(t *testing.T){
 	c.Mmu = m
 
 	c.PC=1
-	m.Wb(1,1)
-	m.Wb(2,8)
+	m.Wb(1,8)
+	m.Wb(2,1)
 
 	assert.Equal(uint16(264), c.read16())
 	assert.Equal(uint16(3), c.PC)
@@ -208,4 +208,18 @@ func TestJr(t *testing.T) {
 
 	c.jr(true)
 	assert.Equal(uint16(4), c.PC)
+}
+
+// JP
+func TestJp(t *testing.T) {
+	assert := assert.New(t)
+	m := new(Mmu)
+	c := new(Cpu)
+	c.Mmu = m
+
+	c.Mmu.Wb(0,6)
+	c.Mmu.Wb(1,1)
+
+	c.jp(true)
+	assert.Equal(uint16(262), c.PC)
 }
