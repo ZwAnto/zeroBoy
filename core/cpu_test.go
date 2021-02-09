@@ -17,77 +17,93 @@ func TestMmu(t *testing.T) {
 
 }
 
-func TestIncDec16(t *testing.T) {
+// Read next 8 bits
+func TestRead8(t *testing.T) {
 	assert := assert.New(t)
+	m := new(Mmu)
 	c := new(Cpu)
+	c.Mmu = m
 
-	c.H=1
-	c.L=1
-	hl := uint16(c.H)<<8 + uint16(c.L)
-	assert.Equal(uint16(257), hl)
+	m.Wb(1, 8)
 
-	c.L=0
-	c.Dec16(&c.H, &c.L)
-	hl = uint16(c.H)<<8 + uint16(c.L)
-	assert.Equal(uint16(255), hl)
-
-	c.Inc16(&c.H, &c.L)
-	hl = uint16(c.H)<<8 + uint16(c.L)
-	assert.Equal(uint16(256), hl)
+	assert.Equal(byte(8), c.read8())
+	assert.Equal(uint16(1), c.PC)
+	assert.Equal(uint64(4), c.Time)
 }
 
+// Read next 16 bits
+func TestRead16(t *testing.T) {
+	assert := assert.New(t)
+	m := new(Mmu)
+	c := new(Cpu)
+	c.Mmu = m
+
+	m.Wb(1, 8)
+	m.Wb(2, 1)
+
+	assert.Equal(uint16(264), c.read16())
+	assert.Equal(uint16(2), c.PC)
+	assert.Equal(uint64(8), c.Time)
+}
+
+// INC DEC 16 bits
+func TestIncDec16(t *testing.T) {
+	assert := assert.New(t)
+	m := new(Mmu)
+	c := new(Cpu)
+	c.Mmu = m
+
+	c.H = 1
+	c.L = 0
+
+	c.Mmu.Wb(0x1, 0x2b)
+	c.Mmu.Wb(0x2, 0x23)
+
+	c.execute_next_op()
+	assert.Equal(byte(0), c.H)
+	assert.Equal(byte(0xff), c.L)
+	assert.Equal(uint64(8), c.Time)
+
+	c.execute_next_op()
+	assert.Equal(byte(1), c.H)
+	assert.Equal(byte(0), c.L)
+	assert.Equal(uint64(16), c.Time)
+}
+
+// INC DEC 8 bits
 func TestIncDec8(t *testing.T) {
 	assert := assert.New(t)
 	m := new(Mmu)
 	c := new(Cpu)
 	c.Mmu = m
 
-	c.Inc8(&c.A)
+	c.Mmu.Wb(1, 0x3c)
+	c.Mmu.Wb(2, 0x3d)
+	c.Mmu.Wb(3, 0x3d)
+	c.Mmu.Wb(4, 0x34)
+
+	c.execute_next_op()
 	assert.Equal(byte(1), c.A)
 	assert.Equal(byte(0), c.GetfS())
+	assert.Equal(uint64(4), c.Time)
 
-	c.Dec8(&c.A)
+	c.execute_next_op()
 	assert.Equal(byte(0), c.A)
 	assert.Equal(byte(1), c.GetfS())
 	assert.Equal(byte(1), c.GetfZ())
+	assert.Equal(uint64(8), c.Time)
 
-	c.Dec8(&c.A)
+	c.execute_next_op()
 	assert.Equal(byte(255), c.A)
 	assert.Equal(byte(1), c.GetfH())
+	assert.Equal(uint64(12), c.Time)
 
-	addr := uint16(c.H)<<8 + uint16(c.L)
-	c.Inc8(c.Mmu.Rb(addr))
-	assert.Equal(byte(1), *c.Mmu.Rb(0))
-
-}
-
-// Read next 8 bits
-func TestRead8(t *testing.T){
-	assert := assert.New(t)
-	m := new(Mmu)
-	c := new(Cpu)
-	c.Mmu = m
-
-	c.PC=1
-	m.Wb(1,8)
-
-	assert.Equal(byte(8), c.read8())
-	assert.Equal(uint16(2), c.PC)
-}
-
-// Read next 16 bits
-func TestRead16(t *testing.T){
-	assert := assert.New(t)
-	m := new(Mmu)
-	c := new(Cpu)
-	c.Mmu = m
-
-	c.PC=1
-	m.Wb(1,8)
-	m.Wb(2,1)
-
-	assert.Equal(uint16(264), c.read16())
-	assert.Equal(uint16(3), c.PC)
+	c.H = 0
+	c.L = 5
+	c.Mmu.Wb(5, 5)
+	c.execute_next_op()
+	assert.Equal(byte(6), *c.Mmu.Rb(5))
+	assert.Equal(uint64(24), c.Time)
 }
 
 // ADD 8 bit
@@ -204,10 +220,11 @@ func TestJr(t *testing.T) {
 	c := new(Cpu)
 	c.Mmu = m
 
-	c.Mmu.Wb(0,3)
+	c.Mmu.Wb(1, 0x18)
+	c.Mmu.Wb(2, 5)
+	c.execute_next_op()
 
-	c.jr(true)
-	assert.Equal(uint16(4), c.PC)
+	assert.Equal(uint16(7), c.PC)
 }
 
 // JP
@@ -217,9 +234,93 @@ func TestJp(t *testing.T) {
 	c := new(Cpu)
 	c.Mmu = m
 
-	c.Mmu.Wb(0,6)
-	c.Mmu.Wb(1,1)
+	c.Mmu.Wb(1, 0xc3)
+	c.Mmu.Wb(2, 6)
+	c.Mmu.Wb(3, 1)
 
-	c.jp(true)
-	assert.Equal(uint16(262), c.PC)
+	c.execute_next_op()
+	assert.Equal(uint16(262-1), c.PC)
+	assert.Equal(uint64(16), c.Time)
+}
+
+// ADD 16 HL
+func TestAdd16HL(t *testing.T) {
+	assert := assert.New(t)
+	m := new(Mmu)
+	c := new(Cpu)
+	c.Mmu = m
+
+	c.H = 1
+	c.L = 0
+
+	c.B = 1
+	c.C = 0
+
+	c.Mmu.Wb(1, 0x09)
+	c.execute_next_op()
+	assert.Equal(byte(0b10), c.H)
+	assert.Equal(byte(0), c.L)
+	assert.Equal(uint64(8), c.Time)
+}
+
+// ADD 16 SP
+func TestAdd16SP(t *testing.T) {
+	assert := assert.New(t)
+	m := new(Mmu)
+	c := new(Cpu)
+	c.Mmu = m
+
+	c.Mmu.Wb(1, 0xe8)
+	c.Mmu.Wb(2, 1)
+
+	c.SP = 240
+	c.execute_next_op()
+	assert.Equal(uint16(241), c.SP)
+	assert.Equal(uint64(16), c.Time)
+}
+
+// SP PUSH POP
+func TestSPPUSHPOP(t *testing.T) {
+
+	assert := assert.New(t)
+	m := new(Mmu)
+	c := new(Cpu)
+	c.Mmu = m
+
+	c.SP = 10
+	c.Mmu.Wb(10, 10)
+	c.Mmu.Wb(11, 1)
+
+	pop := c.popstack()
+	assert.Equal(uint16(266), pop)
+	assert.Equal(uint16(12), c.SP)
+
+	c.pushstack(uint16(12))
+	assert.Equal(byte(0), *c.Mmu.Rb(11))
+	assert.Equal(byte(12), *c.Mmu.Rb(10))
+	assert.Equal(uint16(10), c.SP)
+}
+
+// CALL
+func TestCall(t *testing.T) {
+
+	assert := assert.New(t)
+	m := new(Mmu)
+	c := new(Cpu)
+	c.Mmu = m
+
+	c.SP = 100
+
+	c.Mmu.Wb(1, 0xcd)
+	c.Mmu.Wb(2, 10)
+	c.Mmu.Wb(3, 0)
+
+	c.execute_next_op()
+
+	t.Log(c.Time)
+
+	assert.Equal(uint16(10), c.PC)
+	assert.Equal(uint16(98), c.SP)
+	assert.Equal(uint64(24), c.Time)
+	assert.Equal(uint16(4), c.popstack())
 }
