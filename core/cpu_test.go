@@ -28,7 +28,6 @@ func TestRead8(t *testing.T) {
 
 	assert.Equal(byte(8), c.read8())
 	assert.Equal(uint16(1), c.PC)
-	assert.Equal(uint64(4), c.Time)
 }
 
 // Read next 16 bits
@@ -43,7 +42,6 @@ func TestRead16(t *testing.T) {
 
 	assert.Equal(uint16(264), c.read16())
 	assert.Equal(uint16(2), c.PC)
-	assert.Equal(uint64(8), c.Time)
 }
 
 // INC DEC 16 bits

@@ -1,5 +1,28 @@
 package core
 
+func (c *Cpu) InstrTime(op byte) {
+
+	times := []uint64{
+		4, 12, 8, 8, 4, 4, 8, 4, 20, 8, 8, 8, 4, 4, 8, 4,
+		4, 12, 8, 8, 4, 4, 8, 4, 12, 8, 8, 8, 4, 4, 8, 4,
+		8, 12, 8, 8, 4, 4, 8, 4, 8, 8, 8, 8, 4, 4, 8, 4,
+		8, 12, 8, 8, 12, 12, 12, 4, 8, 8, 8, 8, 4, 4, 8, 4,
+		4, 4, 4, 4, 4, 4, 8, 4, 4, 4, 4, 4, 4, 4, 8, 4,
+		4, 4, 4, 4, 4, 4, 8, 4, 4, 4, 4, 4, 4, 4, 8, 4,
+		4, 4, 4, 4, 4, 4, 8, 4, 4, 4, 4, 4, 4, 4, 8, 4,
+		8, 8, 8, 8, 8, 8, 4, 8, 4, 4, 4, 4, 4, 4, 8, 4,
+		4, 4, 4, 4, 4, 4, 8, 4, 4, 4, 4, 4, 4, 4, 8, 4,
+		4, 4, 4, 4, 4, 4, 8, 4, 4, 4, 4, 4, 4, 4, 8, 4,
+		4, 4, 4, 4, 4, 4, 8, 4, 4, 4, 4, 4, 4, 4, 8, 4,
+		4, 4, 4, 4, 4, 4, 8, 4, 4, 4, 4, 4, 4, 4, 8, 4,
+		8, 12, 12, 16, 12, 16, 8, 16, 8, 16, 12, 4, 12, 24, 8, 16,
+		8, 12, 12, 99, 12, 16, 8, 16, 8, 16, 12, 99, 12, 99, 8, 16,
+		12, 12, 8, 99, 99, 16, 8, 16, 16, 4, 16, 99, 99, 99, 8, 16,
+		12, 12, 8, 4, 99, 16, 8, 16, 12, 8, 16, 4, 99, 99, 8, 16,
+	}
+	c.Time += times[op]
+}
+
 func (c *Cpu) Instruction(op byte) {
 
 	switch op {
@@ -10,7 +33,7 @@ func (c *Cpu) Instruction(op byte) {
 		c.C = byte(val & 0xff)
 	case 0x02: // LD (BC), A
 		addr := uint16(c.B)<<8 + uint16(c.C)
-		c.Wb(addr, c.A) // put A into (BC)
+		c.Mmu.Wb(addr, c.A) // put A into (BC)
 	case 0x03: // INC BC
 		c.Inc16(&c.B, &c.C)
 	case 0x04: // INC B
@@ -28,14 +51,14 @@ func (c *Cpu) Instruction(op byte) {
 	case 0x08: // LD (a16), SP
 		// NOT SURE
 		w_addr := c.read16()
-		c.Wb(w_addr, byte(c.SP&0xff))
-		c.Wb(w_addr+1, byte(c.SP>>8))
+		c.Mmu.Wb(w_addr, byte(c.SP&0xff))
+		c.Mmu.Wb(w_addr+1, byte(c.SP>>8))
 	case 0x09: // ADD HL, BC
 		val := uint16(c.B)<<8 + uint16(c.C)
 		c.add16HL(val)
 	case 0x0A: // LD A, (BC)
 		addr := uint16(c.B)<<8 + uint16(c.C)
-		c.A = *c.Rb(addr)
+		c.A = *c.Mmu.Rb(addr)
 	case 0x0B: // DEC BC
 		c.Dec16(&c.B, &c.C)
 	case 0x0C: // INC C
@@ -57,7 +80,7 @@ func (c *Cpu) Instruction(op byte) {
 		c.E = byte(val & 0xff)
 	case 0x12: // LD (DE), A
 		addr := uint16(c.D)<<8 + uint16(c.E)
-		c.Wb(addr, c.A) // put A into (BC)
+		c.Mmu.Wb(addr, c.A) // put A into (BC)
 	case 0x13: // INC DE
 		c.Inc16(&c.D, &c.E)
 	case 0x14: // INC D
@@ -81,7 +104,7 @@ func (c *Cpu) Instruction(op byte) {
 		c.add16HL(val)
 	case 0x1A: // LD A, (DE)
 		addr := uint16(c.D)<<8 + uint16(c.E)
-		c.A = *c.Rb(addr)
+		c.A = *c.Mmu.Rb(addr)
 	case 0x1B: // DEC DE
 		c.Dec16(&c.D, &c.E)
 	case 0x1C: // INC E
@@ -166,19 +189,19 @@ func (c *Cpu) Instruction(op byte) {
 		c.Mmu.Wb(addr, c.A)
 		c.Dec16(&c.H, &c.L)
 	case 0x33: // INC SP
-		c.Time += 4
+
 		c.SP += 1
 	case 0x34: // INC (HL)
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.Inc8(c.Rb(addr))
-		c.Time += 4
+		c.Inc8(c.Mmu.Rb(addr))
+
 	case 0x35: // DEC (HL)
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.Dec8(c.Rb(addr))
-		c.Time += 4
+		c.Dec8(c.Mmu.Rb(addr))
+
 	case 0x36: // LD (HL), d8
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.Wb(addr, c.read8())
+		c.Mmu.Wb(addr, c.read8())
 	case 0x37: //SCF
 		c.SetfS(false)
 		c.SetfH(false)
@@ -193,7 +216,7 @@ func (c *Cpu) Instruction(op byte) {
 		c.Dec16(&c.H, &c.L)
 	case 0x3B: // DEC SP
 		c.SP -= 1
-		c.Time += 4
+
 	case 0x3C: // INC A
 		c.Inc8(&c.A)
 	case 0x3D: // DEC A
@@ -217,7 +240,7 @@ func (c *Cpu) Instruction(op byte) {
 		c.B = c.L
 	case 0x46: // LD B, (HL)
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.B = *c.Rb(addr)
+		c.B = *c.Mmu.Rb(addr)
 	case 0x47: // LD B, A
 		c.B = c.A
 	case 0x48: // LD C, B
@@ -233,7 +256,7 @@ func (c *Cpu) Instruction(op byte) {
 		c.C = c.L
 	case 0x4E: // LD C, (HL)
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.C = *c.Rb(addr)
+		c.C = *c.Mmu.Rb(addr)
 	case 0x4F: // LD C, A
 		c.C = c.A
 	case 0x50: // LD D, B
@@ -249,7 +272,7 @@ func (c *Cpu) Instruction(op byte) {
 		c.D = c.L
 	case 0x56: // LD D, (HL)
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.D = *c.Rb(addr)
+		c.D = *c.Mmu.Rb(addr)
 	case 0x57: // LD D, A
 		c.D = c.A
 	case 0x58: // LD E, B
@@ -265,7 +288,7 @@ func (c *Cpu) Instruction(op byte) {
 		c.E = c.L
 	case 0x5E: // LD E, (HL)
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.E = *c.Rb(addr)
+		c.E = *c.Mmu.Rb(addr)
 	case 0x5F: // LD E, A
 		c.E = c.A
 	case 0x60: // LD H, B
@@ -281,7 +304,7 @@ func (c *Cpu) Instruction(op byte) {
 		c.H = c.L
 	case 0x66: // LD H, (HL)
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.H = *c.Rb(addr)
+		c.H = *c.Mmu.Rb(addr)
 	case 0x67: // LD H, A
 		c.H = c.A
 	case 0x68: // LD L, B
@@ -297,32 +320,32 @@ func (c *Cpu) Instruction(op byte) {
 	case 0x6D: // LD L, L
 	case 0x6E: // LD L, (HL)
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.L = *c.Rb(addr)
+		c.L = *c.Mmu.Rb(addr)
 	case 0x6F: // LD L, A
 		c.L = c.A
 	case 0x70: // LD (HL), B
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.Wb(addr, c.B)
+		c.Mmu.Wb(addr, c.B)
 	case 0x71: // LD (HL), C
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.Wb(addr, c.C)
+		c.Mmu.Wb(addr, c.C)
 	case 0x72: // LD (HL), D
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.Wb(addr, c.D)
+		c.Mmu.Wb(addr, c.D)
 	case 0x73: // LD (HL), E
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.Wb(addr, c.E)
+		c.Mmu.Wb(addr, c.E)
 	case 0x74: // LD (HL), H
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.Wb(addr, c.H)
+		c.Mmu.Wb(addr, c.H)
 	case 0x75: // LD (HL), L
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.Wb(addr, c.L)
+		c.Mmu.Wb(addr, c.L)
 	case 0x76: // HALT TODO
 		// TODO check what it does
 	case 0x77: // LD (HL), A
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.Wb(addr, c.A)
+		c.Mmu.Wb(addr, c.A)
 	case 0x78: // LD A, B
 		c.A = c.B
 	case 0x79: // LD A, C
@@ -337,7 +360,7 @@ func (c *Cpu) Instruction(op byte) {
 		c.A = c.L
 	case 0x7E: // LD A, (HL)
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.A = *c.Rb(addr)
+		c.A = *c.Mmu.Rb(addr)
 	case 0x7F: // LD A, A
 	case 0x80: // ADD A, B
 		c.add8(c.B)
@@ -353,7 +376,7 @@ func (c *Cpu) Instruction(op byte) {
 		c.add8(c.L)
 	case 0x86: // ADD A, (HL)
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.add8(*c.Rb(addr))
+		c.add8(*c.Mmu.Rb(addr))
 	case 0x87: // ADD A, A
 		c.add8(c.A)
 	case 0x88: // ADC A, B
@@ -370,7 +393,7 @@ func (c *Cpu) Instruction(op byte) {
 		c.adc8(c.L)
 	case 0x8E: // ADC A, (HL)
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.adc8(*c.Rb(addr))
+		c.adc8(*c.Mmu.Rb(addr))
 	case 0x8F: // ADC A, A
 		c.adc8(c.A)
 	case 0x90: // SUB A, B
@@ -387,7 +410,7 @@ func (c *Cpu) Instruction(op byte) {
 		c.sub8(c.L)
 	case 0x96: // SUB A, (HL)
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.sub8(*c.Rb(addr))
+		c.sub8(*c.Mmu.Rb(addr))
 	case 0x97: // SUB A, A
 		c.sub8(c.A)
 	case 0x98: // SBC A, B
@@ -404,7 +427,7 @@ func (c *Cpu) Instruction(op byte) {
 		c.sbc8(c.L)
 	case 0x9E: // SBC A, (HL)
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.sbc8(*c.Rb(addr))
+		c.sbc8(*c.Mmu.Rb(addr))
 	case 0x9F: // SBC A, A
 		c.sbc8(c.A)
 	case 0xA0: // AND B
@@ -421,7 +444,7 @@ func (c *Cpu) Instruction(op byte) {
 		c.and8(c.L)
 	case 0xA6: // AND (HL)
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.and8(*c.Rb(addr))
+		c.and8(*c.Mmu.Rb(addr))
 	case 0xA7: // AND A
 		c.and8(c.A)
 	case 0xA8: // XOR B
@@ -438,7 +461,7 @@ func (c *Cpu) Instruction(op byte) {
 		c.xor8(c.L)
 	case 0xAE: // XOR (HL)
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.xor8(*c.Rb(addr))
+		c.xor8(*c.Mmu.Rb(addr))
 	case 0xAF: // XOR A
 		c.xor8(c.A)
 	case 0xB0: // OR B
@@ -455,7 +478,7 @@ func (c *Cpu) Instruction(op byte) {
 		c.or8(c.B)
 	case 0xB6: // OR (HL)
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.or8(*c.Rb(addr))
+		c.or8(*c.Mmu.Rb(addr))
 	case 0xB7: // OR A
 		c.or8(c.B)
 	case 0xB8: // CP B
@@ -472,10 +495,9 @@ func (c *Cpu) Instruction(op byte) {
 		c.cp8(c.L)
 	case 0xBE: // CP (HL)
 		addr := uint16(c.H)<<8 + uint16(c.L)
-		c.cp8(*c.Rb(addr))
+		c.cp8(*c.Mmu.Rb(addr))
 	case 0xBF: // CP A
 		c.cp8(c.A)
-		// OK
 	case 0xC0:
 	case 0xC1: // POP BC
 		val := c.popstack()
@@ -605,4 +627,5 @@ func (c *Cpu) Instruction(op byte) {
 	case 0xFF:
 	}
 
+	c.InstrTime(op)
 }

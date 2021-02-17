@@ -68,17 +68,9 @@ func (c *Cpu) SetfC(val bool) {
 	}
 }
 
-func (c *Cpu) Rb(addr uint16) *byte {
-	c.Time += 4
-	return c.Mmu.Rb(addr)
-}
-func (c *Cpu) Wb(addr uint16, value byte) {
-	c.Time += 4
-	c.Mmu.Wb(addr, value)
-}
 func (c *Cpu) read8() byte {
 	c.PC++
-	val := *c.Rb(c.PC)
+	val := *c.Mmu.Rb(c.PC)
 	return val
 }
 func (c *Cpu) read16() uint16 {
@@ -87,14 +79,14 @@ func (c *Cpu) read16() uint16 {
 	return val
 }
 func (c *Cpu) Inc16(l *byte, r *byte) {
-	c.Time += 4
+
 	r16 := uint16(*l)<<8 + uint16(*r)
 	r16++
 	*l = byte(r16 >> 8)
 	*r = byte(r16 & 0xff)
 }
 func (c *Cpu) Dec16(l *byte, r *byte) {
-	c.Time += 4
+
 	r16 := uint16(*l)<<8 + uint16(*r)
 	r16--
 	*l = byte(r16 >> 8)
@@ -208,14 +200,14 @@ func (c *Cpu) cp8(y byte) {
 func (c *Cpu) jr(cc bool) {
 	d8 := c.read8()
 	if cc {
-		c.Time += 4
+
 		c.PC = uint16(int32(c.PC) + int32(d8))
 	}
 }
 func (c *Cpu) jp(cc bool) {
 	d16 := c.read16()
 	if cc {
-		c.Time += 4
+
 		c.PC = d16 - 1
 	}
 }
@@ -230,7 +222,6 @@ func (c *Cpu) add16HL(r uint16) {
 	c.H = byte(uint16(val) >> 8)
 	c.L = byte(uint16(val) & 0xff)
 
-	c.Time += 4
 }
 func (c *Cpu) add16SP() {
 	val := c.read8()
@@ -241,14 +232,13 @@ func (c *Cpu) add16SP() {
 	c.SetfH((tmpVal & 0x10) == 0x10)
 	c.SetfC((tmpVal & 0x100) == 0x100)
 	c.SP = total
-	c.Time += 8
+
 }
 
 func (c *Cpu) popstack() uint16 {
-	c.Time += 4
 
-	low := uint16(*c.Rb(c.SP))
-	high := uint16(*c.Rb(c.SP + 1)) << 8
+	low := uint16(*c.Mmu.Rb(c.SP))
+	high := uint16(*c.Mmu.Rb(c.SP + 1)) << 8
 	c.SP += 2
 	return high + low
 
@@ -269,14 +259,13 @@ func (c *Cpu) pushstack(val uint16) {
 func (c *Cpu) call(cc bool) {
 	addr := c.read16()
 	if cc {
-		c.Time += 12
+
 		c.pushstack(c.PC + 1)
 		c.PC = addr
 	}
 }
 
 func (c *Cpu) rst(addr uint16) {
-	c.Time += 12
 
 	c.pushstack(c.PC)
 	c.PC = addr
