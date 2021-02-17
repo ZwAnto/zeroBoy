@@ -322,3 +322,23 @@ func TestCall(t *testing.T) {
 	assert.Equal(uint64(24), c.Time)
 	assert.Equal(uint16(4), c.popstack())
 }
+
+// RST
+func TestRst(t *testing.T) {
+	assert := assert.New(t)
+	m := new(Mmu)
+	c := new(Cpu)
+	c.Mmu = m
+
+	c.SP = 100
+
+	c.Mmu.Wb(1, 0xf7)
+
+	c.execute_next_op()
+
+	assert.Equal(uint16(30), c.PC)
+	assert.Equal(uint16(98), c.SP)
+	assert.Equal(uint64(16), c.Time)
+	assert.Equal(uint16(1), c.popstack())
+
+}

@@ -194,11 +194,9 @@ func (c *Cpu) Instruction(op byte) {
 	case 0x34: // INC (HL)
 		addr := uint16(c.H)<<8 + uint16(c.L)
 		c.Inc8(c.Mmu.Rb(addr))
-
 	case 0x35: // DEC (HL)
 		addr := uint16(c.H)<<8 + uint16(c.L)
 		c.Dec8(c.Mmu.Rb(addr))
-
 	case 0x36: // LD (HL), d8
 		addr := uint16(c.H)<<8 + uint16(c.L)
 		c.Mmu.Wb(addr, c.read8())
@@ -216,7 +214,6 @@ func (c *Cpu) Instruction(op byte) {
 		c.Dec16(&c.H, &c.L)
 	case 0x3B: // DEC SP
 		c.SP -= 1
-
 	case 0x3C: // INC A
 		c.Inc8(&c.A)
 	case 0x3D: // DEC A
@@ -514,8 +511,8 @@ func (c *Cpu) Instruction(op byte) {
 		c.pushstack(val)
 	case 0xC6: // ADD A, d8
 		c.add8(c.read8())
-	case 0xC7:
-
+	case 0xC7: // RST 00H
+		c.rst(0)
 	case 0xC8:
 	case 0xC9:
 	case 0xCA: // JPZ, a16
@@ -527,8 +524,8 @@ func (c *Cpu) Instruction(op byte) {
 		c.call(true)
 	case 0xCE: // ADC A, d8
 		c.adc8(c.read8())
-	case 0xCF:
-
+	case 0xCF: // RST 08H
+		c.rst(8)
 	case 0xD0:
 	case 0xD1: // POP DE
 		val := c.popstack()
@@ -543,8 +540,8 @@ func (c *Cpu) Instruction(op byte) {
 		c.pushstack(val)
 	case 0xD6: // SUB d8
 		c.sub8(c.read8())
-	case 0xD7:
-
+	case 0xD7: // RST 10H
+		c.rst(10)
 	case 0xD8:
 	case 0xD9:
 	case 0xDA: // JP C, a16
@@ -553,8 +550,8 @@ func (c *Cpu) Instruction(op byte) {
 		c.call(c.GetfC() == 1)
 	case 0xDE: // SBC A, d8
 		c.sbc8(c.read8())
-	case 0xDF:
-
+	case 0xDF: // RST 18H
+		c.rst(18)
 	case 0xE0: // LDH (a8), A
 		addr := uint16(0xff00) + uint16(c.read8())
 		c.Mmu.Wb(addr, c.A)
@@ -570,8 +567,8 @@ func (c *Cpu) Instruction(op byte) {
 		c.pushstack(val)
 	case 0xE6: // AND d8
 		c.and8(c.read8())
-	case 0xE7:
-
+	case 0xE7: // RST 20H
+		c.rst(20)
 	case 0xE8: // ADD SP, r8
 		c.add16SP()
 	case 0xE9: // JP (HL)
@@ -581,8 +578,8 @@ func (c *Cpu) Instruction(op byte) {
 		c.Mmu.Wb(addr, c.A)
 	case 0xEE: // XOR d8
 		c.xor8(c.read8())
-	case 0xEF:
-
+	case 0xEF: // RST 28H
+		c.rst(28)
 	case 0xF0: // LDH A, (a8)
 		addr := uint16(0xff00) + uint16(c.read8())
 		c.A = *c.Mmu.Rb(addr)
@@ -599,8 +596,8 @@ func (c *Cpu) Instruction(op byte) {
 		c.pushstack(val)
 	case 0xF6: // OR d8
 		c.or8(c.read8())
-	case 0xF7:
-
+	case 0xF7: // RST 30H
+		c.rst(30)
 	case 0xF8: // LD HL,SP+r8
 		// NOT SURE
 		r8 := c.read8()
@@ -624,7 +621,8 @@ func (c *Cpu) Instruction(op byte) {
 	case 0xFB:
 	case 0xFE: // CP d8
 		c.cp8(c.read8())
-	case 0xFF:
+	case 0xFF: // RST 38H
+		c.rst(38)
 	}
 
 	c.InstrTime(op)
