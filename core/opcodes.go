@@ -495,7 +495,8 @@ func (c *Cpu) Instruction(op byte) {
 		c.cp8(*c.Mmu.Rb(addr))
 	case 0xBF: // CP A
 		c.cp8(c.A)
-	case 0xC0:
+	case 0xC0: // RET NZ
+		c.ret(c.GetfZ() == 0)
 	case 0xC1: // POP BC
 		val := c.popstack()
 		c.B = byte(val >> 8)
@@ -513,11 +514,14 @@ func (c *Cpu) Instruction(op byte) {
 		c.add8(c.read8())
 	case 0xC7: // RST 00H
 		c.rst(0)
-	case 0xC8:
-	case 0xC9:
+	case 0xC8: // RET Z
+		c.ret(c.GetfZ() == 1)
+	case 0xC9: // RET
+		c.ret(true)
 	case 0xCA: // JPZ, a16
 		c.jp(c.GetfZ() == 1)
-	case 0xCB:
+	case 0xCB: // PREFIX CB
+		c.InstructionCB(c.read8())
 	case 0xCC: // CALL Z, a8
 		c.call(c.GetfZ() == 1)
 	case 0xCD: // CALL a8
@@ -526,7 +530,8 @@ func (c *Cpu) Instruction(op byte) {
 		c.adc8(c.read8())
 	case 0xCF: // RST 08H
 		c.rst(8)
-	case 0xD0:
+	case 0xD0: // RET NC
+		c.ret(c.GetfC() == 0)
 	case 0xD1: // POP DE
 		val := c.popstack()
 		c.D = byte(val >> 8)
@@ -542,8 +547,11 @@ func (c *Cpu) Instruction(op byte) {
 		c.sub8(c.read8())
 	case 0xD7: // RST 10H
 		c.rst(10)
-	case 0xD8:
-	case 0xD9:
+	case 0xD8: // RET C
+		c.ret(c.GetfC() == 1)
+	case 0xD9: // RETI
+		c.ret(true)
+		c.IME_enabling = true
 	case 0xDA: // JP C, a16
 		c.jp(c.GetfC() == 1)
 	case 0xDC: // CALL C, a8
@@ -590,7 +598,8 @@ func (c *Cpu) Instruction(op byte) {
 	case 0xF2: // LDH A, (C)
 		addr := uint16(0xff00) + uint16(c.C)
 		c.A = *c.Mmu.Rb(addr)
-	case 0xF3:
+	case 0xF3: // DI
+		c.IME = false
 	case 0xF5: // PUSH AF
 		val := uint16(c.A)<<8 + uint16(c.F)
 		c.pushstack(val)
@@ -618,7 +627,8 @@ func (c *Cpu) Instruction(op byte) {
 	case 0xFA: // LD A, (a16)
 		addr := c.read16()
 		c.A = *c.Mmu.Rb(addr)
-	case 0xFB:
+	case 0xFB: // EI
+		c.IME_enabling = true
 	case 0xFE: // CP d8
 		c.cp8(c.read8())
 	case 0xFF: // RST 38H
@@ -626,4 +636,69 @@ func (c *Cpu) Instruction(op byte) {
 	}
 
 	c.InstrTime(op)
+}
+
+func (c *Cpu) InstructionCB(op byte) {
+
+	col := op & 0xff
+	col_mod := col % 8
+	row := op >> 4
+
+	var reg *uint8
+
+	switch col_mod {
+	case 0:
+		reg = &c.B
+	case 1:
+		reg = &c.C
+	case 2:
+		reg = &c.D
+	case 3:
+		reg = &c.E
+	case 4:
+		reg = &c.H
+	case 5:
+		reg = &c.L
+	case 6:
+		addr := uint16(c.H)<<8 + uint16(c.L)
+		reg = c.Mmu.Rb(addr)
+		c.Time += 8
+	case 7:
+		reg = &c.A
+	}
+
+	switch {
+	case row == 0x0:
+		if col < 0x8 {
+			c.rlc(reg)
+		} else {
+			c.rrc(reg)
+		}
+	case row == 0x1:
+		if col < 0x8 {
+			c.rl(reg)
+		} else {
+			c.rr(reg)
+		}
+	case row == 0x2:
+		if col < 0x8 {
+			c.sla(reg)
+		} else {
+			c.sra(reg)
+		}
+	case row == 0x3:
+		if col < 0x8 {
+			c.swap(reg)
+		} else {
+			c.srl(reg)
+		}
+	case row <= 0x7:
+		c.bit(reg, row-0x4+col/8)
+	case row <= 0xb:
+		c.res(reg, row-0x8+col/8)
+	case row <= 0xf:
+		c.set(reg, row-0xc+col/8)
+	}
+
+	c.Time += 8
 }

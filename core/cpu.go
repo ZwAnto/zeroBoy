@@ -16,6 +16,9 @@ type Cpu struct {
 	Time       uint64
 
 	Mmu *Mmu
+
+	IME          bool
+	IME_enabling bool
 }
 
 func (c *Cpu) execute_next_op() {
@@ -270,4 +273,112 @@ func (c *Cpu) rst(addr uint16) {
 	c.pushstack(c.PC)
 	c.PC = addr
 
+}
+
+func (c *Cpu) ret(cc bool) {
+	addr := c.popstack()
+	if cc {
+		c.PC = addr
+	}
+}
+
+func (c *Cpu) rlc(reg *byte) {
+	carry := *reg >> 7
+	val := *reg<<1 | carry
+	*reg = val
+
+	c.SetfZ(val == 0)
+	c.SetfS(false)
+	c.SetfH(false)
+	c.SetfC(carry == 1)
+}
+func (c *Cpu) rl(reg *byte) {
+	newCarry := *reg >> 7
+	oldCarry := c.GetfC()
+
+	val := *reg<<1 | oldCarry
+	*reg = val
+
+	c.SetfZ(val == 0)
+	c.SetfS(false)
+	c.SetfH(false)
+	c.SetfC(newCarry == 1)
+}
+func (c *Cpu) rrc(reg *byte) {
+	carry := *reg & 1
+	val := (*reg >> 1) | (carry << 7)
+	*reg = val
+
+	c.SetfZ(val == 0)
+	c.SetfS(false)
+	c.SetfH(false)
+	c.SetfC(carry == 1)
+}
+
+func (c *Cpu) rr(reg *byte) {
+	newCarry := *reg & 1
+	oldCarry := c.GetfC()
+	val := (*reg >> 1) | (oldCarry << 7)
+	*reg = val
+
+	c.SetfZ(val == 0)
+	c.SetfS(false)
+	c.SetfH(false)
+	c.SetfC(newCarry == 1)
+}
+func (c *Cpu) sla(reg *byte) {
+
+	carry := *reg >> 7
+	val := *reg << 1
+	*reg = val
+
+	c.SetfZ(val == 0)
+	c.SetfS(false)
+	c.SetfH(false)
+	c.SetfC(carry == 1)
+
+}
+func (c *Cpu) sra(reg *byte) {
+
+	carry := *reg & 1
+	val := (*reg & 128) | *reg>>1
+	*reg = val
+
+	c.SetfZ(val == 0)
+	c.SetfS(false)
+	c.SetfH(false)
+	c.SetfC(carry == 1)
+
+}
+func (c *Cpu) swap(reg *byte) {
+	val := (*reg << 4) | (*reg >> 4)
+	*reg = val
+
+	c.SetfZ(val == 0)
+	c.SetfS(false)
+	c.SetfH(false)
+	c.SetfC(false)
+}
+func (c *Cpu) srl(reg *byte) {
+
+	carry := *reg & 1
+	val := *reg >> 1
+	*reg = val
+
+	c.SetfZ(val == 0)
+	c.SetfS(false)
+	c.SetfH(false)
+	c.SetfC(carry == 1)
+
+}
+func (c *Cpu) bit(reg *byte, b byte) {
+	c.SetfZ((*reg>>b)&1 == 0)
+	c.SetfS(false)
+	c.SetfH(true)
+}
+func (c *Cpu) set(reg *byte, b byte) {
+	*reg = *reg | (1 << b)
+}
+func (c *Cpu) res(reg *byte, b byte) {
+	*reg = *reg &^ (1 << b)
 }
